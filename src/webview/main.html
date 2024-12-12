@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="${vueUri}" type="text/javascript"></script>
+    <link rel="stylesheet" href="${cssUri}">
+
+    <!-- <script src="./vue.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="./main.css"> -->
+</head>
+
+<body>
+    <div id="app">
+        <div class="page" v-if="page === 'settoken'">
+            <div class="set-token">
+                <div>
+                    <button class="set-token-btn" @click="setToken">设置CNBToken</button>
+                </div>
+                <div class="set-token-tips">
+                    <p>请打开CNB的<a href="https://cnb.cool/profile/token" target="_blank">Token设置页面</a>,来获取CNBToken</p>
+                    <p>本插件需要以下权限:</p>
+                    <p>repo-code 读写 用作读取/创建/删除指定仓库的分支列表</p>
+                    <p>repo-cnb-trigger 读写权限 用来启动云开发环境</p>
+                    <p>repo-cnb-detail 只读 用来获取云开发环境的链接地址</p>
+                    <p>account-engage 只读 用做读取用户在CNB上的仓库列表</p>
+                    <p>group-resource 读写 用作新建仓库</p>
+                    <p>此外,你还需要安装Remote SSH插件</p>
+                </div>
+            </div>
+        </div>
+        <div class="page" v-if="page === 'repolist'">
+            <div>
+                <div class="search-box">
+                    <input type="text" v-model="search_repo_keyword" placeholder="搜索仓库">
+                </div>
+            </div>
+            <div class="add-repo-btn">
+                <a href="javascript:void(0)" @click="newRepo">创建新仓库</a>
+            </div>
+            <div class="repolist">
+                <div class="repo-item" v-for="repo in filteredRepositories" v-bind:key="repo.name">
+                    <div class="repo-item-content">
+                        <div class="repo-item-header">
+                            <div>
+                                <a href="javascript:void(0)" class="repo-link" @click="openRepo(repo.path)"> {{
+                                    repo.path }} </a>
+                            </div>
+                            <div v-if="repo.visibility_level === 'Private' " style="margin-left: 10px;">
+                                <span class="repo-private">私有</span>
+                            </div>
+                        </div>
+                        <div class="repo-desc">
+                            {{ repo.description }}
+                        </div>
+
+                    </div>
+                    <div class="repo-star">
+                        <div style="margin-right: 10px;" class="repo-star-item"><svg id="star" class="icon"
+                                xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+                                <g fill="none">
+                                    <path
+                                        d="M9.54158 6.38026L8.00145 3.25962L6.46132 6.38026L3.01749 6.88068L5.50947 9.30976L4.9212 12.7397L8.00145 11.1203L11.0817 12.7397L10.4934 9.30976L12.9854 6.88068L9.54158 6.38026ZM14.5328 6.09503C14.7789 6.13078 14.8771 6.43317 14.6991 6.60674L11.5679 9.65888L12.3071 13.9686C12.3491 14.2136 12.0919 14.4005 11.8718 14.2848L8.00145 12.2501L4.13111 14.2848C3.91102 14.4005 3.65379 14.2136 3.69582 13.9686L4.43499 9.65888L1.30382 6.60674C1.12576 6.43318 1.22401 6.13078 1.47008 6.09503L5.79726 5.46625L7.73243 1.54516C7.84248 1.32219 8.16043 1.32219 8.27047 1.54516L10.2056 5.46625L14.5328 6.09503Z"
+                                        fill="currentColor"></path>
+                                </g>
+                            </svg><span class="text-sm">{{ repo.star_count }}</span></div>
+                        <div class="repo-star-item"><svg id="fork" class="icon" xmlns="http://www.w3.org/2000/svg"
+                                width="16" height="16" viewBox="0 0 16 16">
+                                <g fill="none">
+                                    <path
+                                        d="M4 5.5C4.82843 5.5 5.5 4.82843 5.5 4C5.5 3.17157 4.82843 2.5 4 2.5C3.17157 2.5 2.5 3.17157 2.5 4C2.5 4.82843 3.17157 5.5 4 5.5ZM4 5.5V7.5C4 7.77614 4.22386 8 4.5 8H8M12 5.5C12.8284 5.5 13.5 4.82843 13.5 4C13.5 3.17157 12.8284 2.5 12 2.5C11.1716 2.5 10.5 3.17157 10.5 4C10.5 4.82843 11.1716 5.5 12 5.5ZM12 5.5V7.5C12 7.77614 11.7761 8 11.5 8H8M8 10.5C7.17157 10.5 6.5 11.1716 6.5 12C6.5 12.8284 7.17157 13.5 8 13.5C8.82843 13.5 9.5 12.8284 9.5 12C9.5 11.1716 8.82843 10.5 8 10.5ZM8 10.5V8"
+                                        stroke="currentColor"></path>
+                                </g>
+                            </svg><span class="text-sm">{{ repo.fork_count}}</span></div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        <div class="page" v-if="page === 'branchlist'">
+            <div>
+                <div class="search-box">
+                    <input type="text" v-model="search_branch_keyword" placeholder="搜索分支">
+                </div>
+            </div>
+            <div class="backto-repos" @click="backRepos()">
+                <svg t="1733926493817" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                    xmlns="http://www.w3.org/2000/svg" p-id="5989" width="14" height="14">
+                    <path
+                        d="M471.893333 149.333333a42.666667 42.666667 0 0 0-73.258666-29.781333l-343.893334 352.981333a42.666667 42.666667 0 0 0-0.768 58.709334l343.893334 372.352a42.666667 42.666667 0 0 0 73.984-28.928v-190.677334c56.917333-5.248 116.821333-1.365333 179.882666 11.989334 65.834667 13.994667 150.528 76.032 253.909334 202.24a42.666667 42.666667 0 0 0 75.477333-31.36c-15.445333-152.32-73.984-281.301333-176.170667-384.853334-92.757333-93.994667-204.373333-146.432-333.098666-156.586666V149.333333z"
+                        fill="#000000" fill-opacity=".85" p-id="5990"></path>
+                </svg>
+                返回仓库列表
+            </div>
+            <div class="branchlist">
+                <div class="branch-item" v-for="branch in filteredBranches" v-bind:key="branch.name"
+                    @mouseenter="showCNBStartBtn(branch.name)" @mouseleave="hiddenCNBStartBtn(branch.name)">
+                    <div class="branch-left">
+                        <div class="branch-title">
+                            {{ branch.name }}
+                        </div>
+                        <div class="branch-sha">
+                            <svg id="commit" class="icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                viewBox="0 0 16 16" style="width: 12px; height: 12px;">
+                                <g fill="none">
+                                    <path
+                                        d="M11.5 8C11.5 9.933 9.933 11.5 8 11.5C6.067 11.5 4.5 9.933 4.5 8M11.5 8C11.5 6.067 9.933 4.5 8 4.5C6.067 4.5 4.5 6.067 4.5 8M11.5 8H16M4.5 8H0"
+                                        stroke="currentColor"></path>
+                                </g>
+                            </svg>
+
+                            {{ branch.commit.sha.substring(0, 8) }}
+                        </div>
+                    </div>
+                    <div class="start-cnb branch-right">
+                        <button class="start-cnb-btn" @click="startCnb(branch.name)" v-if="btnShows[branch.name]">
+                            <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 16 16">
+                                <g fill="none">
+                                    <path
+                                        d="M11.5286 1.87149C11.5769 1.73005 11.5356 1.5733 11.4233 1.47452C11.0472 1.14247 10.0965 0.443125 8.66911 0.339708C7.07054 0.223769 6.08089 0.652279 5.58096 0.969951C5.36531 1.10676 5.35326 1.41748 5.55499 1.57422L9.62723 4.73936C9.98617 5.01807 10.5125 4.8604 10.6591 4.43003L11.5286 1.87149Z"
+                                        fill="orange"></path>
+                                    <path
+                                        d="M1.49017 11.2664C1.32368 11.3781 1.24855 11.584 1.30235 11.7774C1.45724 12.3339 1.91868 13.4919 3.22833 14.5456C4.53797 15.5992 6.08738 15.7128 6.74962 15.6966C6.94764 15.692 7.12016 15.5617 7.17998 15.3724L9.79046 7.11064C9.97875 6.51425 9.31048 6.01386 8.79154 6.3626L1.49017 11.2664Z"
+                                        fill="orange"></path>
+                                    <path
+                                        d="M3.39813 2.54827C3.27013 2.49773 3.12683 2.50607 3.00579 2.57193C2.52256 2.83488 1.28526 3.64506 0.647135 5.30947C0.154627 6.59222 0.328071 8.01085 0.463488 8.70463C0.508009 8.9314 0.747306 9.06218 0.962489 8.97824L8.79485 5.92024C9.35414 5.70181 9.35646 4.91111 8.7981 4.6899L3.39813 2.54827Z"
+                                        fill="orange"></path>
+                                    <path
+                                        d="M15.0167 8.46843C15.243 8.62194 15.5528 8.48652 15.5922 8.21569C15.6961 7.49872 15.7861 6.25076 15.371 5.30933C14.8177 4.05487 13.8786 3.28133 13.433 2.9669C13.292 2.86766 13.1019 2.87786 12.9725 2.99241L10.9959 4.74541C10.6732 5.03154 10.7066 5.54492 11.0636 5.78746L15.0167 8.46936V8.46843Z"
+                                        fill="orange"></path>
+                                    <path
+                                        d="M9.49413 15.1604C9.47372 15.3937 9.67128 15.5866 9.90409 15.5616C10.6531 15.4813 12.1918 15.1841 13.3447 14.0827C14.467 13.0109 14.832 11.7384 14.9382 11.2319C14.9669 11.0951 14.9326 10.9528 14.8445 10.8442L11.3886 6.57909C11.0143 6.11719 10.2681 6.34535 10.2162 6.93757L9.49366 15.1604H9.49413Z"
+                                        fill="orange"></path>
+                                </g>
+                            </svg>
+
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="page" v-if="page === 'newrepo'">
+            <div class="newRepo">
+                <div class="newRepo-title">创建新仓库</div>
+                <div class="form-box">
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="repoName" class="required">组织名称</label>
+                        </div>
+                        <div class="form-item-input">
+                            <input type="text" id="repoName" v-model="groupName" disabled="disabled">
+                        </div>
+                    </div>
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="repoName" class="required">仓库名称</label>
+                        </div>
+                        <div class="form-item-input">
+                            <input type="text" id="repoName" v-model="newRepoConfig.name" placeholder="请输入仓库名称">
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="repoDesc">仓库描述</label>
+                        </div>
+                        <div class="form-item-input">
+                            <textarea id="repoDesc" v-model="newRepoConfig.desc" placeholder="请输入仓库描述"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label class="required">仓库权限</label>
+                        </div>
+                        <div class="form-item-input checkbox-group">
+                            <label>
+                                <input type="checkbox" v-model="newRepoConfig.isPrivate" :true-value="true"
+                                    :false-value="false"> 是否私有
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="repoImport">从其它仓库导入</label>
+                        </div>
+                        <div class="form-item-input">
+                            <input type="text" id="repoImport" v-model="newRepoConfig.import" placeholder="https://">
+                        </div>
+                    </div>
+                </div>
+                <div class="newRepo-btn">
+
+                    <button class="newRepo-btn-cancel" @click="cancelNewRepo" :disabled="newRepoCreating">取消</button>
+                    <button class="newRepo-btn-create" @click="createNewRepo" :disabled="newRepoCreating">创建</button>
+                </div>
+                <div class="newRepo-btn-tips" v-if="newRepoCreating">
+                    <span class="newRepo-btn-tips">创建新仓库需要等待几分钟,请耐心等待，创建成功后会自动跳转到仓库列表界面</span>
+                </div>
+                <div class="newRepo-error" v-if="newRepoError">
+                    <span class="newRepo-error-tips">{{newRepoError}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="page !== 'settoken'" class="resetToken">
+            <a href="javascript:void(0)" @click="resetToken">重置CNBToken</a>
+        </div>
+
+        <div class="waitScreen" v-if="waitCNBStart">
+            <div>
+                <div style="text-align: center;">
+                    <svg class="icon animate-btn" xmlns="http://www.w3.org/2000/svg" width="60" height="60"
+                        viewBox="0 0 16 16">
+                        <g fill="none">
+                            <path
+                                d="M11.5286 1.87149C11.5769 1.73005 11.5356 1.5733 11.4233 1.47452C11.0472 1.14247 10.0965 0.443125 8.66911 0.339708C7.07054 0.223769 6.08089 0.652279 5.58096 0.969951C5.36531 1.10676 5.35326 1.41748 5.55499 1.57422L9.62723 4.73936C9.98617 5.01807 10.5125 4.8604 10.6591 4.43003L11.5286 1.87149Z"
+                                fill="orange"></path>
+                            <path
+                                d="M1.49017 11.2664C1.32368 11.3781 1.24855 11.584 1.30235 11.7774C1.45724 12.3339 1.91868 13.4919 3.22833 14.5456C4.53797 15.5992 6.08738 15.7128 6.74962 15.6966C6.94764 15.692 7.12016 15.5617 7.17998 15.3724L9.79046 7.11064C9.97875 6.51425 9.31048 6.01386 8.79154 6.3626L1.49017 11.2664Z"
+                                fill="orange"></path>
+                            <path
+                                d="M3.39813 2.54827C3.27013 2.49773 3.12683 2.50607 3.00579 2.57193C2.52256 2.83488 1.28526 3.64506 0.647135 5.30947C0.154627 6.59222 0.328071 8.01085 0.463488 8.70463C0.508009 8.9314 0.747306 9.06218 0.962489 8.97824L8.79485 5.92024C9.35414 5.70181 9.35646 4.91111 8.7981 4.6899L3.39813 2.54827Z"
+                                fill="orange"></path>
+                            <path
+                                d="M15.0167 8.46843C15.243 8.62194 15.5528 8.48652 15.5922 8.21569C15.6961 7.49872 15.7861 6.25076 15.371 5.30933C14.8177 4.05487 13.8786 3.28133 13.433 2.9669C13.292 2.86766 13.1019 2.87786 12.9725 2.99241L10.9959 4.74541C10.6732 5.03154 10.7066 5.54492 11.0636 5.78746L15.0167 8.46936V8.46843Z"
+                                fill="orange"></path>
+                            <path
+                                d="M9.49413 15.1604C9.47372 15.3937 9.67128 15.5866 9.90409 15.5616C10.6531 15.4813 12.1918 15.1841 13.3447 14.0827C14.467 13.0109 14.832 11.7384 14.9382 11.2319C14.9669 11.0951 14.9326 10.9528 14.8445 10.8442L11.3886 6.57909C11.0143 6.11719 10.2681 6.34535 10.2162 6.93757L9.49366 15.1604H9.49413Z"
+                                fill="orange"></path>
+                        </g>
+                    </svg>
+                </div>
+                <div style="margin-top: 20px;">
+                    正在启动云开发中.....
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <script src="${eventUri}" type="text/javascript"></script>
+    <script>
+
+        const { createApp, ref } = Vue
+
+        // function call() {
+
+        // }
+
+        const app = createApp({
+            data() {
+                return {
+                    page: '',
+                    repo_page: 1,
+                    repo_page_size: 10,
+                    branch_page: 1,
+                    branch_page_size: 10,
+                    repoId: '',
+                    repositories: [],
+                    waitCNBStart: false,
+                    branches: [
+
+                    ],
+                    btnShows: {},
+                    search_repo_keyword: '',
+                    search_branch_keyword: '',
+                    newRepoConfig: {
+                        name: '',
+                        desc: '',
+                        isPrivate: false,
+                        import: ''
+                    },
+                    newRepoCreating: false,
+                    newRepoError: '',
+                    groupName: ''
+                };
+            },
+            methods: {
+                sayHello() {
+                    call('hello', {}, data => {
+                        if (data.command === 'tokenIsReady') {
+                            this.tokenIsReady();
+                        } else {
+                            this.tokenIsNotReady();
+                        }
+                    })
+                },
+                setToken() {
+                    call('setToken', {}, data => {
+                        if (data.command === 'tokenIsReady') {
+                            this.tokenIsReady();
+                        } else {
+                            this.tokenIsNotReady();
+                        }
+                    })
+                },
+                tokenIsReady() {
+                    this.page = 'repolist';
+                    this.repositories = []
+                    this.repo_page = 1;
+                    this.getRepositories(this.repo_page, this.repo_page_size);
+                },
+                tokenIsNotReady() {
+                    this.page = 'settoken';
+                },
+                backRepos() {
+                    this.page = 'repolist';
+                },
+                openRepo(repoPath) {
+                    this.branches = [];
+                    this.branch_page = 1;
+                    this.branch_page_size = 10;
+                    this.page = 'branchlist';
+                    this.repoId = repoPath;
+                    this.getBranches(repoPath, this.branch_page, this.branch_page_size);
+                },
+                getBranches(repoPath, page, page_size) {
+                    call('getBranches', {
+                        repoId: repoPath,
+                        page: page,
+                        page_size: page_size
+                    }, data => {
+                        let branches = data.branches;
+                        if (branches.length !== 0) {
+                            this.branches.push(...branches);
+                            this.branch_page++;
+                            this.getBranches(data.repoId, this.branch_page, this.branch_page_size);
+                        }
+                    })
+
+                },
+                getRepositories(page, page_size) {
+                    call('getRepositories', {
+                        page: page,
+                        page_size: page_size
+                    }, data => {
+                        let repos = data.repositories;
+                        if (repos.length !== 0) {
+                            this.repositories.push(...repos);
+                            this.repo_page++;
+                            this.getRepositories(this.repo_page, this.repo_page_size);
+                        }
+                    })
+                },
+                startCnb(branchName) {
+                    this.waitCNBStart = true;
+                    call('startEnvironment', {
+                        branch: branchName,
+                        repoId: this.repoId
+                    }, data => {
+                        this.waitCNBStart = false;
+                    })
+                },
+                showCNBStartBtn(branchName) {
+                    this.btnShows[branchName] = true;
+                },
+                hiddenCNBStartBtn(branchName) {
+                    this.btnShows[branchName] = false;
+                },
+                resetToken() {
+                    call('resetToken', {}, data => {
+                        this.tokenIsNotReady();
+                    })
+                },
+                newRepo() {
+                    if (this.groupName === '') {
+                        call('getGroupList', {}, data => {
+                            this.groupName = data.groups[0].name;
+                        })
+                    }
+
+                    this.newRepoConfig = {
+                        name: '',
+                        desc: '',
+                        isPrivate: false,
+                        import: ''
+                    };
+                    this.newRepoCreating = false;
+                    this.newRepoError = '';
+                    this.page = 'newrepo';
+                },
+                newBranch() {
+                    this.page = 'newbranch';
+                },
+                cancelNewRepo() {
+                    this.page = "repolist"
+                },
+                createNewRepo() {
+
+                    if (this.newRepoConfig.name.length < 2 || this.newRepoConfig.name.length > 50) {
+                        this.newRepoError = "仓库名称长度必须在2到50个字符之间";
+                        return;
+                    }
+
+                    if (this.newRepoConfig.import !== '') {
+                        if (!this.newRepoConfig.import.startsWith('https://')) {
+                            this.newRepoError = "导入地址格式错误";
+                            return;
+                        }
+                        if (this.newRepoConfig.import.endsWith('/')) {
+                            this.newRepoConfig.import = this.newRepoConfig.import.slice(0, -1);
+                        }
+                        if (!this.newRepoConfig.import.endsWith('.git')) {
+                            this.newRepoConfig.import = this.newRepoConfig.import + '.git';
+                        }
+                    }
+
+                    this.newRepoCreating = true;
+                    call('createNewRepo', {
+                        groupName: this.groupName,
+                        name: this.newRepoConfig.name,
+                        description: this.newRepoConfig.desc,
+                        visibility: this.newRepoConfig.isPrivate ? 'private' : 'public',
+                        import: this.newRepoConfig.import
+                    }, data => {
+                        if (data.command === 'createNewRepoSuccess') {
+                            // 创建成功后，刷新仓库列表
+                            this.tokenIsReady();
+                        } else {
+                            // 创建失败
+                            this.newRepoCreating = false;
+                            this.newRepoError = "创建失败,请重试";
+                        }
+                    })
+                }
+
+            },
+            watch: {
+                page(newVal) {
+                    if (newVal === 'repolist') {
+                        this.search_repo_keyword = '';
+                    }
+                    if (newVal === 'branchlist') {
+                        this.search_branch_keyword = '';
+                    }
+                }
+            },
+            computed: {
+                filteredRepositories() {
+                    if (this.search_repo_keyword === '') {
+                        return this.repositories;
+                    }
+                    return this.repositories.filter(repo => repo.path.includes(this.search_repo_keyword));
+                },
+                filteredBranches() {
+                    if (this.search_branch_keyword === '') {
+                        return this.branches;
+                    }
+                    return this.branches.filter(branch => branch.name.includes(this.search_branch_keyword));
+                }
+            },
+            mounted() {
+                this.sayHello();
+            }
+        });
+
+        app.mount('#app');
+    </script>
+
+    <script>
+
+    </script>
+</body>
+
+</html>
