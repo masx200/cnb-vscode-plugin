@@ -1,4 +1,4 @@
-# CNB VSCODE Plugin
+# CNB.COOL VSCODE Plugin
 
 一个用于管理 CNB (https://cnb.cool) 云开发环境的 VS Code 插件。
 
@@ -66,7 +66,7 @@
 
 1. 打开 VS Code
 2. 点击左侧扩展图标或使用快捷键 `Ctrl+Shift+X` (`Cmd+Shift+X` on Mac)
-3. 在搜索框中输入 "CNB Dev"
+3. 在搜索框中输入 "cnb.cool"
 4. 点击安装
 
 ### 方式二：从 Release 安装 VSIX 文件
