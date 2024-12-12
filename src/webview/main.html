@@ -333,6 +333,17 @@
                             this.branches.push(...branches);
                             this.branch_page++;
                             this.getBranches(data.repoId, this.branch_page, this.branch_page_size);
+                        }else{
+                            if (this.branches.length === 0) {
+                                this.branches = [
+                                    {
+                                        name: 'main',
+                                        commit: {
+                                            sha: 'main'
+                                        }
+                                    }
+                                ];
+                            }
                         }
                     })
 
