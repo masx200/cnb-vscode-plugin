@@ -319,7 +319,7 @@ body {
 /* 文本输入框样式 */
 .form-item-input input[type="text"],
 .form-item-input textarea {
-    width: 100%;
+    width: calc(100% - 24px);
     padding: 8px 12px;
     font-size: 14px;
     line-height: 1.5;
