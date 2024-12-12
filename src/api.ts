@@ -163,7 +163,7 @@ main:
         image: cnbcool/default-dev-env:latest
       stages:
         - name: import repository
-          script: cnb-init-from ${url}
+          script: cnb-init-from-without-lfs ${url}
 `
                 },
                 { headers: this.headers });
