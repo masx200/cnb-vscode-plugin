@@ -38,9 +38,26 @@
 
 ## 安装
 
-### 从 VS Code 插件市场安装
+### 方式一：从 VS Code 插件市场安装（推荐）
 
-[插件市场链接]
+1. 打开 VS Code
+2. 点击左侧扩展图标或使用快捷键 `Ctrl+Shift+X` (`Cmd+Shift+X` on Mac)
+3. 在搜索框中输入 "CNB Dev"
+4. 点击安装
+
+### 方式二：从 Release 安装 VSIX 文件
+
+1. 从 [Release 页面](https://cnb.cool/xiaofei/cnb-vscode-plugin/-/releases) 下载最新的 `.vsix` 文件
+2. 在 VS Code/Cursor 中:
+   - 按 `Ctrl+Shift+P` (`Cmd+Shift+P` on Mac) 打开命令面板
+   - 输入 "Install from VSIX"
+   - 选择下载的 `.vsix` 文件
+3. 重启 VS Code/Cursor
+
+注意：
+- VS Code 插件市场安装方式仅支持 VS Code
+- VSIX 安装方式同时支持 VS Code 和 Cursor IDE
+- 建议定期检查更新以获取最新功能
 
 ## 使用说明
 
