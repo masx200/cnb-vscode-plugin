@@ -214,6 +214,15 @@ main:
         }
     }
 
+    async getSubGroupList(groupName: string): Promise<Group[]> {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/user/groups/${groupName}?page=1&page_size=100`, { headers: this.headers });
+            return response.data;
+        } catch (error) {
+            throw new Error('Failed to get sub group list');
+        }
+    }
+
     // 创建新仓库
     async createRepository(groupName: string, params: CreateRepositoryParams): Promise<void> {
         try {

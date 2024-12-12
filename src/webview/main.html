@@ -152,7 +152,11 @@
                             <label for="repoName" class="required">组织名称</label>
                         </div>
                         <div class="form-item-input">
-                            <input type="text" id="repoName" v-model="groupName" disabled="disabled">
+                            <select id="groupName" v-model="newRepoConfig.group" class="custom-select">
+                                <option v-for="group in groups" :value="group.path" :key="group.path">
+                                    {{ group.path }}
+                                </option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-item">
@@ -286,6 +290,7 @@
                     search_repo_keyword: '',
                     search_branch_keyword: '',
                     newRepoConfig: {
+                        group: '',
                         name: '',
                         desc: '',
                         isPrivate: false,
@@ -294,8 +299,8 @@
                     },
                     newRepoCreating: false,
                     newRepoError: '',
-                    groupName: '',
-                    templateRepos: []
+                    templateRepos: [],
+                    groups: []
                 };
             },
             methods: {
@@ -397,9 +402,22 @@
                     })
                 },
                 newRepo() {
-                    if (!this.groupName) {
+                    if ( this.groups &&  this.groups.length === 0) {
                         call('getGroupList', {}, data => {
-                            this.groupName = data.groups[0].name;
+                            let groups = data.groups;
+                            this.groups = [];
+                            for (let group of groups) {
+                                this.groups.push(group);
+                                call('getSubGroupList', {
+                                    groupName: group.name
+                                }, data => {
+                                    let subgroups = data.groups;
+                                    this.groups.push(...subgroups);
+                                })
+                            }
+                            if (this.groups && this.groups.length > 0) {
+                                this.newRepoConfig.group = this.groups[0].path;
+                            }
                         })
                     }
 
@@ -410,12 +428,16 @@
                     }
 
                     this.newRepoConfig = {
+                        group: '',
                         name: '',
                         desc: '',
                         isPrivate: false,
                         import: '',
                         env: ''
                     };
+                    if (this.groups && this.groups.length > 0) {
+                        this.newRepoConfig.group = this.groups[0].path;
+                    }
                     this.newRepoCreating = false;
                     this.newRepoError = '';
                     this.page = 'newrepo';
@@ -427,6 +449,11 @@
                     this.page = "repolist"
                 },
                 createNewRepo() {
+
+                    if (this.newRepoConfig.group === '') {
+                        this.newRepoError = "请选择组织";
+                        return;
+                    }
 
                     if (this.newRepoConfig.name.length < 2 || this.newRepoConfig.name.length > 50) {
                         this.newRepoError = "仓库名称长度必须在2到50个字符之间";
@@ -448,7 +475,7 @@
 
                     this.newRepoCreating = true;
                     call('createNewRepo', {
-                        groupName: this.groupName,
+                        groupName: this.newRepoConfig.group,
                         name: this.newRepoConfig.name,
                         description: this.newRepoConfig.desc,
                         visibility: this.newRepoConfig.isPrivate ? 'private' : 'public',

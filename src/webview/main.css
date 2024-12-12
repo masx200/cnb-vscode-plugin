@@ -489,7 +489,7 @@ body {
 .custom-select option {
     background-color: var(--vscode-dropdown-background);
     color: var(--vscode-dropdown-foreground);
-    padding: 8px;
+    padding: 16px 8px;
 }
 
 /* 添加一个自定义的下拉箭头 */

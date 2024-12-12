@@ -199,6 +199,16 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                             eventid: message.eventid
                         });
                         break;
+                    case 'getSubGroupList':
+                        token = this.context.globalState.get<string>(TOKEN_KEY);
+                        if (!token) throw new Error('Token not found');
+                        const subGroups = await new CNBDevAPI(token).getSubGroupList(message.groupName);
+                        webviewView.webview.postMessage({
+                            command: 'subGroupListFetched',
+                            groups: subGroups,
+                            eventid: message.eventid
+                        });
+                        break;
                     case 'getTemplateRepoList':
                         token = this.context.globalState.get<string>(TOKEN_KEY);
                         if (!token) throw new Error('Token not found');
