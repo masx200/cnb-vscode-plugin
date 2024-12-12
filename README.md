@@ -1,4 +1,4 @@
-# CNB VSCODE Plugin
+# CNB.COOL VSCODE Plugin
 
 一个用于管理 CNB (https://cnb.cool) 云开发环境的 VS Code 插件。
 
