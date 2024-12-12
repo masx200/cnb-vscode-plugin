@@ -7,6 +7,7 @@ const API_BASE_URL = 'https://api.cnb.cool';
 export interface Repository {
     id: string;
     name: string;
+    web_url: string;
 }
 
 export interface Branch {
@@ -247,41 +248,12 @@ main:
         }
     }
 
-    // 获取环境列表
-    async getEnvironments(): Promise<Environment[]> {
+    async getTemplateRepoList(): Promise<Repository[]> {
         try {
-            const response = await axios.get(
-                `${API_BASE_URL}/environments`,
-                { headers: this.headers }
-            );
+            const response = await axios.get(`${API_BASE_URL}/xiaofei/cnb_plugin_template/-/repos?page=1&page_size=1000&desc=true`, { headers: this.headers });
             return response.data;
         } catch (error) {
-            throw new Error('Failed to fetch environments');
-        }
-    }
-
-    // 连接到环境
-    async connectToEnvironment(environmentId: string): Promise<string> {
-        try {
-            const response = await axios.get(
-                `${API_BASE_URL}/environments/${environmentId}/connect`,
-                { headers: this.headers }
-            );
-            return response.data.sshUrl;
-        } catch (error) {
-            throw new Error('Failed to connect to environment');
-        }
-    }
-
-    // 销毁环境
-    async destroyEnvironment(environmentId: string): Promise<void> {
-        try {
-            await axios.delete(
-                `${API_BASE_URL}/environments/${environmentId}`,
-                { headers: this.headers }
-            );
-        } catch (error) {
-            throw new Error('Failed to destroy environment');
+            throw new Error('Failed to get template list');
         }
     }
 }

@@ -258,8 +258,8 @@ body {
 /* 新仓库创建页面容器 */
 .newRepo {
     max-width: 600px;
-    margin: 20px auto;
-    padding: 24px;
+    margin: 10px auto;
+    padding: 10px;
     background: var(--vscode-editor-background);
     border: 1px solid var(--vscode-widget-border);
     border-radius: 6px;
@@ -267,10 +267,10 @@ body {
 
 /* 标题样式 */
 .newRepo-title {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--vscode-foreground);
-    margin-bottom: 24px;
+    margin-bottom: 10px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--vscode-widget-border);
 }
@@ -460,4 +460,54 @@ body {
 .add-repo-btn a:hover {
     color: var(--vscode-foreground);
     text-decoration: underline;
+}
+
+.custom-select {
+    width: 100%;
+    padding: 8px;
+    font-size: var(--vscode-font-size);
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-input-foreground);
+    background-color: var(--vscode-input-background);
+    border: 1px solid var(--vscode-input-border);
+    border-radius: 2px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.custom-select:focus {
+    outline: none;
+    border-color: var(--vscode-focusBorder);
+}
+
+.custom-select:hover {
+    background-color: var(--vscode-input-background);
+    border-color: var(--vscode-input-border);
+}
+
+.custom-select option {
+    background-color: var(--vscode-dropdown-background);
+    color: var(--vscode-dropdown-foreground);
+    padding: 8px;
+}
+
+/* 添加一个自定义的下拉箭头 */
+.custom-select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-wrapper::after {
+    content: "";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid var(--vscode-input-foreground);
+    pointer-events: none;
 }

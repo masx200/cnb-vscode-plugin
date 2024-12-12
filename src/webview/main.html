@@ -184,13 +184,26 @@
                             </label>
                         </div>
                     </div>
-
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="repoEnv">选择开发环境</label>
+                        </div>
+                        <div class="form-item-input">
+                            <select id="repoEnv" v-model="newRepoConfig.env" class="custom-select">
+                                <option value="" selected>不选择环境</option>
+                                <option v-for="repo in templateRepos" :value="repo.web_url + '.git'" :key="repo.name">
+                                    {{ repo.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-item">
                         <div class="form-item-label">
                             <label for="repoImport">从其它仓库导入</label>
                         </div>
                         <div class="form-item-input">
-                            <input type="text" id="repoImport" v-model="newRepoConfig.import" placeholder="https://">
+                            <input type="text" id="repoImport" v-model="newRepoConfig.import" placeholder="仓库地址,可以为空"
+                                :disabled="newRepoConfig.env !== ''">
                         </div>
                     </div>
                 </div>
@@ -276,11 +289,13 @@
                         name: '',
                         desc: '',
                         isPrivate: false,
-                        import: ''
+                        import: '',
+                        env: ''
                     },
                     newRepoCreating: false,
                     newRepoError: '',
-                    groupName: ''
+                    groupName: '',
+                    templateRepos: []
                 };
             },
             methods: {
@@ -333,7 +348,7 @@
                             this.branches.push(...branches);
                             this.branch_page++;
                             this.getBranches(data.repoId, this.branch_page, this.branch_page_size);
-                        }else{
+                        } else {
                             if (this.branches.length === 0) {
                                 this.branches = [
                                     {
@@ -382,9 +397,15 @@
                     })
                 },
                 newRepo() {
-                    if (this.groupName === '') {
+                    if (!this.groupName) {
                         call('getGroupList', {}, data => {
                             this.groupName = data.groups[0].name;
+                        })
+                    }
+
+                    if (this.templateRepos && this.templateRepos.length === 0) {
+                        call('getTemplateRepoList', {}, data => {
+                            this.templateRepos = data.templateRepos;
                         })
                     }
 
@@ -392,7 +413,8 @@
                         name: '',
                         desc: '',
                         isPrivate: false,
-                        import: ''
+                        import: '',
+                        env: ''
                     };
                     this.newRepoCreating = false;
                     this.newRepoError = '';
@@ -452,7 +474,18 @@
                     if (newVal === 'branchlist') {
                         this.search_branch_keyword = '';
                     }
+                },
+                'newRepoConfig.env': {
+                    handler: function (newVal, oldVal) {
+                        if (newVal) {
+                            this.newRepoConfig.import = newVal;
+                        } else {
+                            this.newRepoConfig.import = '';
+                        }
+                    },
+                    immediate: true
                 }
+
             },
             computed: {
                 filteredRepositories() {

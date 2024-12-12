@@ -199,7 +199,16 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                             eventid: message.eventid
                         });
                         break;
-                
+                    case 'getTemplateRepoList':
+                        token = this.context.globalState.get<string>(TOKEN_KEY);
+                        if (!token) throw new Error('Token not found');
+                        const templateRepos = await new CNBDevAPI(token).getTemplateRepoList();
+                        webviewView.webview.postMessage({
+                            command: 'templateRepoListFetched',
+                            templateRepos: templateRepos,
+                            eventid: message.eventid
+                        });
+                        break;
                     case 'createNewRepo':
                         token = this.context.globalState.get<string>(TOKEN_KEY);
                         if (!token) throw new Error('Token not found');
