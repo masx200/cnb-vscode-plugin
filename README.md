@@ -25,6 +25,30 @@
   - 支持自定义 CPU 配置（1-64核）
   - 自动适配 VS Code 和 Cursor IDE
 
+## 插件截图
+
+从插件市场上安装
+
+<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/install.png" width="500" alt="安装"/>
+
+
+仓库列表
+
+<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/repos.png" width="500" alt="仓库列表"/>
+
+
+分支列表
+
+<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/branches.png" width="500" alt="分支列表"/>
+
+启动云开发
+
+<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/start.png" width="500" alt="启动云开发"/>
+
+创建仓库
+
+<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/create.png" width="500" alt="创建仓库"/>
+
 ## 前置要求
 
 1. VS Code 或 Cursor IDE
