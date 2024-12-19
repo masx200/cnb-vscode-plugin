@@ -343,6 +343,13 @@ body {
     resize: vertical;
 }
 
+.form-item-tips {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--vscode-descriptionForeground);
+    line-height: 1.4;
+}
+
 /* Checkbox 组样式 */
 .form-item-input.checkbox-group {
     display: flex;
@@ -426,6 +433,8 @@ body {
     color: var(--vscode-descriptionForeground);
     font-size: 13px;
 }
+
+
 
 /* 响应式调整 */
 @media (max-width: 480px) {

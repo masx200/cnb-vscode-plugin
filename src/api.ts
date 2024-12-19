@@ -8,6 +8,7 @@ export interface Repository {
     id: string;
     name: string;
     web_url: string;
+    description: string;
 }
 
 export interface Branch {

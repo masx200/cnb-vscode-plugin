@@ -30,30 +30,30 @@
 
 
 
-<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/install.png" width="500" alt="安装"/>
+<img src="https://raw.githubusercontent.com/lixiaofei19930207/images/refs/heads/main/cnb_plugin/install.png" width="500" alt="安装"/>
 
 从插件市场上安装
 
 
 
-<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/repos.png" width="500" alt="仓库列表"/>
+<img src="https://raw.githubusercontent.com/lixiaofei19930207/images/refs/heads/main/cnb_plugin/repos.png" width="500" alt="仓库列表"/>
 
 仓库列表
 
 
 
-<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/branches.png" width="500" alt="分支列表"/>
+<img src="https://raw.githubusercontent.com/lixiaofei19930207/images/refs/heads/main/cnb_plugin/branches.png" width="500" alt="分支列表"/>
 
 分支列表
 
 
 
-<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/start.png" width="500" alt="启动云开发"/>
+<img src="https://raw.githubusercontent.com/lixiaofei19930207/images/refs/heads/main/cnb_plugin/start.png" width="500" alt="启动云开发"/>
 
 启动云开发
 
 
-<img src="https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/master/images/create.png" width="500" alt="创建仓库"/>
+<img src="https://raw.githubusercontent.com/lixiaofei19930207/images/refs/heads/main/cnb_plugin/newrepo.png" width="500" alt="创建仓库"/>
 
 创建仓库
 

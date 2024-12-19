@@ -199,6 +199,9 @@
                                     {{ repo.name }}
                                 </option>
                             </select>
+                            <div class="form-item-tips">
+                                {{templateRepoTips}}
+                            </div>
                         </div>
                     </div>
                     <div class="form-item">
@@ -297,6 +300,7 @@
                         import: '',
                         env: ''
                     },
+                    templateRepoTips: '',
                     newRepoCreating: false,
                     newRepoError: '',
                     templateRepos: [],
@@ -506,8 +510,10 @@
                     handler: function (newVal, oldVal) {
                         if (newVal) {
                             this.newRepoConfig.import = newVal;
+                            this.templateRepoTips = this.templateRepos.find(repo => (repo.web_url + ".git") === newVal)?.description || '';
                         } else {
                             this.newRepoConfig.import = '';
+                            this.templateRepoTips = '';
                         }
                     },
                     immediate: true
