@@ -40,7 +40,7 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
             if (!isValid) {
                 vscode.window.showErrorMessage('Invalid token');
                 return await this.requestToken();
-            }else{
+            } else {
                 return true;
             }
         }
@@ -87,7 +87,7 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         token = this.context.globalState.get<string>(TOKEN_KEY);
                         if (token) {
                             const isValid = await this.validateAndSaveToken(token);
-                            if(isValid){
+                            if (isValid) {
                                 webviewView.webview.postMessage({
                                     command: 'tokenIsReady',
                                     eventid: message.eventid
@@ -102,12 +102,12 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'setToken':
                         let isSet = await this.requestToken();
-                        if(isSet){
+                        if (isSet) {
                             webviewView.webview.postMessage({
                                 command: 'tokenIsReady',
                                 eventid: message.eventid
                             });
-                        }else{
+                        } else {
                             webviewView.webview.postMessage({
                                 command: 'tokenIsNotReady',
                                 eventid: message.eventid
@@ -170,16 +170,27 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                                 message.branch,
                                 selectedCpu.value,
                             );
-                            if (isCursor()) {
-                                await vscode.env.openExternal(vscode.Uri.parse(sshUrl.cursor));
+
+                            if (!sshUrl.cursor && !sshUrl.vscode) {
+                                webviewView.webview.postMessage({
+                                    command: 'cnbStartFailed',
+                                    eventid: message.eventid
+                                });
+                                throw new Error('启动云开发成功,但是未能远程连接,这可能是您自定义了开发环境,但是并未安装openssh服务');
                             } else {
-                                await vscode.env.openExternal(vscode.Uri.parse(sshUrl.vscode));
+                                if (isCursor()) {
+                                    await vscode.env.openExternal(vscode.Uri.parse(sshUrl.cursor));
+                                } else {
+                                    await vscode.env.openExternal(vscode.Uri.parse(sshUrl.vscode));
+                                }
+                                webviewView.webview.postMessage({
+                                    command: 'cnbStartSuccess',
+                                    eventid: message.eventid
+                                });
                             }
-                            webviewView.webview.postMessage({
-                                command: 'cnbStartSuccess',
-                                eventid: message.eventid
-                            });
-                        }else{
+
+
+                        } else {
                             webviewView.webview.postMessage({
                                 command: 'cancelCNBStart',
                                 eventid: message.eventid
@@ -188,7 +199,7 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
 
 
                         break;
-                    
+
                     case 'getGroupList':
                         token = this.context.globalState.get<string>(TOKEN_KEY);
                         if (!token) throw new Error('Token not found');
@@ -222,22 +233,22 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                     case 'createNewRepo':
                         token = this.context.globalState.get<string>(TOKEN_KEY);
                         if (!token) throw new Error('Token not found');
-                        try{
+                        try {
                             const repo = await new CNBDevAPI(token).createRepository(message.groupName, message);
                             webviewView.webview.postMessage({
                                 command: 'createNewRepoSuccess',
                                 repo: repo,
                                 eventid: message.eventid
                             });
-                        }catch(error){
+                        } catch (error) {
                             webviewView.webview.postMessage({
                                 command: 'createNewRepoFailed',
                                 eventid: message.eventid
                             });
                         }
-                       
+
                         break;
-                    }
+                }
             } catch (error) {
                 vscode.window.showErrorMessage((error as Error).message);
                 webviewView.webview.postMessage({

@@ -1,8 +1,8 @@
 {
     "name": "cnb-dev-extension",
     "displayName": "CNB.COOL",
-    "description": "用来在VSCode/Cursor中创建并连接CNB.COOL的云开发环境",
-    "version": "0.0.9",
+    "description": "用来在VSCode/Cursor中创建仓库以及创建并且连接CNB.COOL的云开发环境",
+    "version": "0.0.10",
     "repository": {
         "type": "git",
         "url": "https://cnb.cool/xiaofei/cnb-vscode-plugin.git"
