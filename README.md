@@ -4,6 +4,7 @@
 
 此插件可以帮助你在VSCODE中快速启动和连接CNB云开发环境，支持 VS Code 和 Cursor IDE。
 
+
 ## 功能特性
 
 - 🔑 CNB Token 管理

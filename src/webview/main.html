@@ -298,6 +298,10 @@
                             如果长时间没有同步成功，请点击下面地址查看同步情况<br>
                             <a :href="syncImageConfig.logUrl" target="_blank">点击查看同步状态</a>
                         </div>
+                        <div class="form-item-tips" style="color: red;" v-if="syncImageConfig.error">
+                            同步失败，请点击下面地址查看同步情况<br>
+                            <a :href="syncImageConfig.logUrl" target="_blank">点击查看同步状态</a>
+                        </div>
                     </div>
 
                     <div class="progress-bar" v-if="syncing">
@@ -393,7 +397,8 @@
                         newImage: '',
                         arch: 'amd64',
                         setDefault: false,
-                        logUrl: ''
+                        logUrl: '',
+                        error: ''
                     },
                     syncing: false,
                 };
@@ -434,6 +439,7 @@
                     this.syncImageConfig.source = '';
                     this.syncImageConfig.newImage = '';
                     this.syncImageConfig.arch = 'amd64';
+                    this.syncImageConfig.error = '';
                     call('getDefaultRepo', {}, data => {
                         const defaultRepo = data.defaultRepo;
                         if (defaultRepo) {
@@ -448,14 +454,22 @@
                 goSyncImage() {
                     this.syncImageConfig.newImage = '';
                     this.syncing = true;
+                    this.syncImageConfig.error = '';
                     this.syncImageConfig.logUrl = `https://cnb.cool/${this.syncImageConfig.target}/-/build/logs`;
                     call('syncImage', {
                         source: this.syncImageConfig.source,
                         target: this.syncImageConfig.target,
                         arch: this.syncImageConfig.arch
                     }, data => {
-                        this.syncImageConfig.newImage = data.newImage;
-                        this.syncing = false;
+                        if(data.error){
+                            this.syncing = false;
+                            this.syncImageConfig.newImage = "";
+                            this.syncImageConfig.error = data.error;
+                            console.log(this.syncImageConfig);
+                        }else{
+                            this.syncImageConfig.newImage = data.newImage;
+                            this.syncing = false;
+                        }
                     });
                 },
                 setDefaultRepo() {

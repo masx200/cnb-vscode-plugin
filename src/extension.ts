@@ -154,6 +154,7 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         webviewView.webview.postMessage({
                             command: 'syncImageSuccess',
                             newImage: syncResult.newImage,
+                            error: syncResult.error,
                             eventid: message.eventid
                         });
                         break;

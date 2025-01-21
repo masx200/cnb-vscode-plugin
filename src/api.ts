@@ -44,6 +44,7 @@ export interface Group {
 
 export interface SyncImageParams {
     newImage: string;
+    error: string;
 }
 
 // API类
@@ -438,13 +439,15 @@ main:
 
             if(status === "success"){
                 return {
-                    newImage: imageName
+                    newImage: imageName,
+                    error: ""
                 }
             }else{
-                throw new Error('Failed to sync image');
+                return {
+                    newImage: "",
+                    error: "同步失败"
+                }
             }
-
-            
 
         }catch(error){
             throw new Error('Failed to sync image');

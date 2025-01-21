@@ -22,4 +22,4 @@ $:
           image: cnbcool/attachments:latest
           settings:
             attachments:
-              - cnb-dev-extension-0.0.11.vsix
+              - cnb-dev-extension-0.0.12.vsix
