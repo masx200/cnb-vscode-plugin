@@ -25,9 +25,10 @@
   - 一键启动云开发环境
   - 支持自定义 CPU 配置（1-64核）
   - 自动适配 VS Code 和 Cursor IDE
+- 🔄 镜像同步
+  - 利用CNB流水线将Docker官方镜像或者gcr.io的镜像同步到CNB制品库，解决镜像下载不下来的问题
 
 ## 插件截图
-
 
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/install.png" width="500" alt="安装"/>
@@ -40,6 +41,10 @@
 
 仓库列表
 
+
+<img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/syncimage.png" width="500" alt="镜像同步"/>
+
+镜像同步,同步完成后新的镜像地址会显示在【新镜像地址】输入框中
 
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/branches.png" width="500" alt="分支列表"/>

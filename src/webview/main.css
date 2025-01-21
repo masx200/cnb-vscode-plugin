@@ -186,7 +186,7 @@ body {
 
 .animate-btn {
     animation: 
-        accelerate 1.5s cubic-bezier(.3,0,.7,1),
+        accelerate 1.5s cubic-bezier(.3,0,.7,1.39),
         continuous-rotate 0.6s linear infinite;
     animation-delay: 0s, 1.2s;
     transform-origin: center center;
@@ -519,4 +519,96 @@ body {
     border-right: 5px solid transparent;
     border-top: 5px solid var(--vscode-input-foreground);
     pointer-events: none;
+}
+
+.syncImage {
+    padding: 20px;
+}
+
+.syncImage-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: var(--vscode-editor-foreground);
+}
+
+.repo-select {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.set-default-btn {
+    padding: 4px 8px;
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.set-default-btn:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.set-default-btn.active {
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border-color: var(--vscode-button-background);
+}
+
+.sync-btn-container {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.sync-btn {
+    padding: 8px 24px;
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    border: 1px solid var(--vscode-button-border);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.sync-btn:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+.sync-btn:disabled {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-disabledForeground);
+    cursor: not-allowed;
+}
+
+.progress-bar {
+    margin-top: 20px;
+    height: 2px;
+    background: var(--vscode-progressBar-background);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-inner {
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        var(--vscode-progressBar-foreground),
+        transparent
+    );
+    animation: progress 2s ease-in-out infinite;
+    width: 50%;
+    position: absolute;
+    left: -50%;
+}
+
+@keyframes progress {
+    0% {
+        left: -50%;
+    }
+    100% {
+        left: 100%;
+    }
 }

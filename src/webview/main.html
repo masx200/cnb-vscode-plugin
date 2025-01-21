@@ -227,8 +227,90 @@
                 </div>
             </div>
         </div>
+        <div class="page" v-if="page === 'syncImage'">
+            <div class="syncImage">
+                <div class="syncImage-title">镜像同步</div>
+                <div class="form-box">
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="sourceImage" class="required">原始镜像地址</label>
+                        </div>
+                        <div class="form-item-input">
+                            <input type="text" id="sourceImage" v-model="syncImageConfig.source"
+                                placeholder="例如: nginx:latest 或 docker.io/library/nginx:latest">
+                        </div>
+                    </div>
 
-        <div v-if="page !== 'settoken'" class="resetToken">
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label for="targetRepo" class="required">制品仓库</label>
+                        </div>
+                        <div class="form-item-input repo-select">
+                            <select id="targetRepo" v-model="syncImageConfig.target" class="custom-select">
+                                <option v-for="repo in repositories" :value="repo.path" :key="repo.path">
+                                    {{ repo.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="form-item-input checkbox-group">
+                            <label>
+                                <input type="checkbox" @change="setDefaultRepo"
+                                    v-model="syncImageConfig.setDefault">是否设置为默认仓库
+                            </label>
+                        </div>
+                        <div class="form-item-tips">
+                            制品仓库指的是在CNB上用来存放Docker镜像的仓库，随便创建一个公开的镜像仓库就可以。
+                            <br>请注意，如果需要设置默认仓库的话，请先选择镜像，再点击设置默认
+                            <br>如果仓库不是新仓库的话，请确保里面存在main分支
+                        </div>
+                    </div>
+
+                    <div class="form-item" v-if="syncImageConfig.newImage">
+                        <div class="form-item-label">
+                            <label>新镜像地址</label>
+                        </div>
+                        <div class="form-item-input">
+                            <input type="text" :value="syncImageConfig.newImage" readonly>
+                        </div>
+                    </div>
+
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label>镜像架构</label>
+                        </div>
+
+                        <div class="form-item-input">
+                            <select id="arch" v-model="syncImageConfig.arch" class="custom-select">
+                                <option value="amd64">amd64</option>
+                                <option value="arm64">arm64</option>
+                                <option value="both">两者都要</option>
+                            </select>
+                        </div>
+                        
+                    </div>
+
+                    <div class="sync-btn-container">
+                        <button class="sync-btn" @click="goSyncImage" :disabled="syncing || syncImageConfig.source === ''">
+                            {{ syncing ? '同步中...' : '开始同步' }}
+                        </button>
+                        <div class="form-item-tips" v-if="syncing">
+                            同步可能需要1到2分钟，请耐心等待。<br>
+                            如果长时间没有同步成功，请点击下面地址查看同步情况<br>
+                            <a :href="syncImageConfig.logUrl" target="_blank">点击查看同步状态</a>
+                        </div>
+                    </div>
+
+                    <div class="progress-bar" v-if="syncing">
+                        <div class="progress-inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="page !== 'settoken' && !syncing" class="resetToken">
+            <a v-if="page !== 'syncImage'" href="javascript:void(0)" @click="syncImage">镜像同步</a>
+            <a v-else href="javascript:void(0)" @click="backRepos">返回仓库列表</a>
+            &nbsp;&nbsp;
             <a href="javascript:void(0)" @click="resetToken">重置CNBToken</a>
         </div>
 
@@ -304,7 +386,16 @@
                     newRepoCreating: false,
                     newRepoError: '',
                     templateRepos: [],
-                    groups: []
+                    groups: [],
+                    syncImageConfig: {
+                        source: '',
+                        target: '',
+                        newImage: '',
+                        arch: 'amd64',
+                        setDefault: false,
+                        logUrl: ''
+                    },
+                    syncing: false,
                 };
             },
             methods: {
@@ -337,6 +428,48 @@
                 },
                 backRepos() {
                     this.page = 'repolist';
+                },
+                syncImage() {
+                    this.page = 'syncImage';
+                    this.syncImageConfig.source = '';
+                    this.syncImageConfig.newImage = '';
+                    this.syncImageConfig.arch = 'amd64';
+                    call('getDefaultRepo', {}, data => {
+                        const defaultRepo = data.defaultRepo;
+                        if (defaultRepo) {
+                            this.syncImageConfig.target = defaultRepo;
+                            this.syncImageConfig.setDefault = true
+                        }else{
+                            this.syncImageConfig.target = this.repositories[0].path;
+                            this.syncImageConfig.setDefault = false
+                        }
+                    });
+                },
+                goSyncImage() {
+                    this.syncImageConfig.newImage = '';
+                    this.syncing = true;
+                    this.syncImageConfig.logUrl = `https://cnb.cool/${this.syncImageConfig.target}/-/build/logs`;
+                    call('syncImage', {
+                        source: this.syncImageConfig.source,
+                        target: this.syncImageConfig.target,
+                        arch: this.syncImageConfig.arch
+                    }, data => {
+                        this.syncImageConfig.newImage = data.newImage;
+                        this.syncing = false;
+                    });
+                },
+                setDefaultRepo() {
+                    if (this.syncImageConfig.setDefault) {
+                        call('setDefaultRepo', {
+                            repo: this.syncImageConfig.target
+                        }, data => {
+                            
+                        });
+                    } else {
+                        call('cancelSetDefaultRepo', {}, data => {
+                            console.log(data);
+                        });
+                    }
                 },
                 openRepo(repoPath) {
                     this.branches = [];
@@ -406,7 +539,7 @@
                     })
                 },
                 newRepo() {
-                    if ( this.groups &&  this.groups.length === 0) {
+                    if (this.groups && this.groups.length === 0) {
                         call('getGroupList', {}, data => {
                             let groups = data.groups;
                             this.groups = [];

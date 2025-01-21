@@ -42,6 +42,10 @@ export interface Group {
     access_role: string;
 }
 
+export interface SyncImageParams {
+    newImage: string;
+}
+
 // API类
 export class CNBDevAPI {
     private token: string;
@@ -264,6 +268,186 @@ main:
             return response.data;
         } catch (error) {
             throw new Error('Failed to get template list');
+        }
+    }
+
+    parseImageName(sourceImage: string) {
+        const imageName = sourceImage.split('@')[0];
+        
+        const parts = imageName.split('/');
+                switch (parts.length) {
+            case 1:
+                return parts[0];
+            case 2:
+                if (!parts[0].includes('.') && !parts[0].includes(':')) {
+                    return parts.join('/');
+                }
+                return parts[1];
+            default:
+                return parts.slice(1).join('/');
+        }
+    }
+
+    async getSyncImageStatus(repoid: string, sn: string): Promise<string> {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/${repoid}/-/build/status/${sn}`, { headers: this.headers });
+            const data = await response.data;
+            return data.status;
+        } catch (error) {
+            throw new Error('Failed to get environment info');
+        }
+    }
+
+    async syncImage(source: string, target: string, arch: string): Promise<SyncImageParams> {
+        
+        let imageName = this.parseImageName(source);
+        if(!imageName.includes(":")){
+            imageName = imageName + ":latest";
+        }
+
+        imageName = imageName.replace(/\//g, "-");
+
+        imageName = `docker.cnb.cool/${target}/${imageName}`
+
+        let yml = ""
+        if(arch === "both"){
+            // 同步amd64和arm64
+            yml = `$:
+  api_trigger_cnb_dev_plugin:
+    - runner:
+        tags: cnb:arch:amd64
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${imageName}-linux-amd64
+      stages:
+        - name: docker login
+          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
+        - name: docker pull
+          script: docker pull ${source}
+        - name: docker tag
+          script: docker tag ${source} \${IMAGE_TAG}
+        - name: docker push
+          script: docker push \${IMAGE_TAG}
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: build-amd64 
+          
+    - runner:
+        tags: cnb:arch:arm64:v8
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${imageName}-linux-arm64
+      stages:
+        - name: docker login
+          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
+        - name: docker pull
+          script: docker pull ${source}
+        - name: docker tag
+          script: docker tag ${source} \${IMAGE_TAG}
+        - name: docker push
+          script: docker push \${IMAGE_TAG}
+        - name: resolve
+          type: cnb:resolve
+          options:
+            key: build-arm64
+
+    - services:
+        - docker
+      env:
+        IMAGE_TAG: ${imageName}
+      stages:
+        - name: await the amd64
+          type: cnb:await
+          options:
+            key: build-amd64
+        - name: await the arm64
+          type: cnb:await
+          options:
+            key: build-arm64
+        - name: manifest
+          image: cnbcool/manifest
+          settings:
+            target: ${imageName}
+            template: ${imageName}-OS-ARCH
+            platforms:
+              - linux/amd64
+              - linux/arm64`
+        }else if(arch === "amd64"){
+            // 同步amd64
+            yml = `$:
+  api_trigger_cnb_dev_plugin:
+    - runner:
+        tags: cnb:arch:amd64
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${imageName}
+      stages:
+        - name: docker login
+          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
+        - name: docker pull
+          script: docker pull ${source}
+        - name: docker tag
+          script: docker tag ${source} \${IMAGE_TAG}
+        - name: docker push
+          script: docker push \${IMAGE_TAG}
+`
+        }else{
+            // 同步arm64
+            yml = `$:
+  api_trigger_cnb_dev_plugin:
+    - runner:
+        tags: cnb:arch:arm64:v8
+      services:
+        - docker
+      env:
+        IMAGE_TAG: ${imageName}
+      stages:
+        - name: docker login
+          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
+        - name: docker pull
+          script: docker pull ${source}
+        - name: docker tag
+          script: docker tag ${source} \${IMAGE_TAG}
+        - name: docker push
+          script: docker push \${IMAGE_TAG}
+`
+        }
+
+        try{
+            const response = await axios.post(`${API_BASE_URL}/${target}/-/build/start`,
+                {
+                    branch: "main",
+                    event: "api_trigger_cnb_dev_plugin",
+                    config: yml
+                },
+                { headers: this.headers });
+            
+            const data = response.data;
+            const sn = data.sn;
+
+            let status = await this.getSyncImageStatus(target, sn);
+            while (status === "pending") {
+                // 休眠1秒
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                status = await this.getSyncImageStatus(target, sn);
+            }
+
+            if(status === "success"){
+                return {
+                    newImage: imageName
+                }
+            }else{
+                throw new Error('Failed to sync image');
+            }
+
+            
+
+        }catch(error){
+            throw new Error('Failed to sync image');
         }
     }
 }

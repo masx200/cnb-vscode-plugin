@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 const TOKEN_KEY = 'cnbDev.token';
-
+const DEFAULT_REPO_KEY = 'cnbDev.defaultRepo';
 function isCursor(): boolean {
     const appName = vscode.env.appName;
     return appName.toLowerCase().includes('cursor');
@@ -118,6 +118,42 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         this.context.globalState.update(TOKEN_KEY, '');
                         webviewView.webview.postMessage({
                             command: 'tokenIsNotReady',
+                            eventid: message.eventid
+                        });
+                        break;
+                    case 'setDefaultRepo':
+                        const repo = message.repo;
+                        this.context.globalState.update(DEFAULT_REPO_KEY, repo);
+                        webviewView.webview.postMessage({
+                            command: 'setDefaultRepoSuccess',
+                            eventid: message.eventid
+                        });
+                        break;
+                    case 'cancelSetDefaultRepo':
+                        this.context.globalState.update(DEFAULT_REPO_KEY, '');
+                        webviewView.webview.postMessage({
+                            command: 'cancelSetDefaultRepo',
+                            eventid: message.eventid
+                        });
+                        break;
+                    case 'getDefaultRepo':
+                        const defaultRepo = this.context.globalState.get<string>(DEFAULT_REPO_KEY);
+                        webviewView.webview.postMessage({
+                            command: 'getDefaultRepo',
+                            defaultRepo: defaultRepo,
+                            eventid: message.eventid
+                        });
+                        break;
+                    case 'syncImage':
+                        token = this.context.globalState.get<string>(TOKEN_KEY);
+                        if (!token) throw new Error('Token not found');
+                        const source = message.source;
+                        const target = message.target;
+                        const arch = message.arch;
+                        const syncResult = await new CNBDevAPI(token).syncImage(source, target, arch);
+                        webviewView.webview.postMessage({
+                            command: 'syncImageSuccess',
+                            newImage: syncResult.newImage,
                             eventid: message.eventid
                         });
                         break;
