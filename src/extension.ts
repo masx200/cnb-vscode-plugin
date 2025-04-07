@@ -150,7 +150,15 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         const source = message.source;
                         const target = message.target;
                         const arch = message.arch;
-                        const syncResult = await new CNBDevAPI(token).syncImage(source, target, arch);
+                        const syncResult = await new CNBDevAPI(token).syncImage(source, target, arch, 
+                            function(sn:string){
+                                webviewView.webview.postMessage({
+                                    command: 'syncImageSuccess_getsn',
+                                    sn: sn,
+                                    autoDelete: false,
+                                    eventid: message.eventid
+                                });
+                            });
                         webviewView.webview.postMessage({
                             command: 'syncImageSuccess',
                             newImage: syncResult.newImage,

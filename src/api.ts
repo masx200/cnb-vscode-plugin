@@ -299,8 +299,10 @@ main:
         }
     }
 
-    async syncImage(source: string, target: string, arch: string): Promise<SyncImageParams> {
+    async syncImage(source: string, target: string, arch: string, getsn: (sn: string) => void): Promise<SyncImageParams> {
         
+        getsn = getsn || function(){}
+
         let imageName = this.parseImageName(source);
         if(!imageName.includes(":")){
             imageName = imageName + ":latest";
@@ -429,6 +431,8 @@ main:
             
             const data = response.data;
             const sn = data.sn;
+
+            getsn(sn)
 
             let status = await this.getSyncImageStatus(target, sn);
             while (status === "pending") {

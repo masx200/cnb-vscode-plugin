@@ -17,7 +17,8 @@ window.addEventListener('message', event => {
     let eventid = message.eventid;
     if (eventid && eventMap[eventid]) {
         eventMap[eventid](message);
-        delete eventMap[eventid];
+        if(message.autoDelete !== false)
+            delete eventMap[eventid];
     }else{
         console.log('eventid not found', eventid);
     }

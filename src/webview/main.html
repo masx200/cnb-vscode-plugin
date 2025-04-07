@@ -206,10 +206,11 @@
                     </div>
                     <div class="form-item">
                         <div class="form-item-label">
-                            <label for="repoImport">从其它仓库导入</label>
+                            <label for="repoImport">从其它仓库导入(支持外部仓库)</label>
                         </div>
                         <div class="form-item-input">
-                            <input type="text" id="repoImport" v-model="newRepoConfig.import" placeholder="仓库地址,可以为空"
+                            <input type="text" id="repoImport" v-model="newRepoConfig.import"
+                                placeholder="https://github.com/caddyserver/caddy.git"
                                 :disabled="newRepoConfig.env !== ''">
                         </div>
                     </div>
@@ -286,15 +287,16 @@
                                 <option value="both">两者都要</option>
                             </select>
                         </div>
-                        
+
                     </div>
 
                     <div class="sync-btn-container">
-                        <button class="sync-btn" @click="goSyncImage" :disabled="syncing || syncImageConfig.source === ''">
+                        <button class="sync-btn" @click="goSyncImage"
+                            :disabled="syncing || syncImageConfig.source === ''">
                             {{ syncing ? '同步中...' : '开始同步' }}
                         </button>
                         <div class="form-item-tips" v-if="syncing">
-                            同步可能需要1到2分钟，请耐心等待。<br>
+                            同步需要时间，越大的影像同步时间越慢，请耐心等待。<br>
                             如果长时间没有同步成功，请点击下面地址查看同步情况<br>
                             <a :href="syncImageConfig.logUrl" target="_blank">点击查看同步状态</a>
                         </div>
@@ -445,7 +447,7 @@
                         if (defaultRepo) {
                             this.syncImageConfig.target = defaultRepo;
                             this.syncImageConfig.setDefault = true
-                        }else{
+                        } else {
                             this.syncImageConfig.target = this.repositories[0].path;
                             this.syncImageConfig.setDefault = false
                         }
@@ -461,15 +463,20 @@
                         target: this.syncImageConfig.target,
                         arch: this.syncImageConfig.arch
                     }, data => {
-                        if(data.error){
-                            this.syncing = false;
-                            this.syncImageConfig.newImage = "";
-                            this.syncImageConfig.error = data.error;
-                            console.log(this.syncImageConfig);
-                        }else{
-                            this.syncImageConfig.newImage = data.newImage;
-                            this.syncing = false;
+                        if (data.command === 'syncImageSuccess_getsn') {
+                            this.syncImageConfig.logUrl = `https://cnb.cool/${this.syncImageConfig.target}/-/build/logs/${data.sn}`;
+                        } else {
+                            if (data.error) {
+                                this.syncing = false;
+                                this.syncImageConfig.newImage = "";
+                                this.syncImageConfig.error = data.error;
+                                console.log(this.syncImageConfig);
+                            } else {
+                                this.syncImageConfig.newImage = data.newImage;
+                                this.syncing = false;
+                            }
                         }
+
                     });
                 },
                 setDefaultRepo() {
@@ -477,7 +484,7 @@
                         call('setDefaultRepo', {
                             repo: this.syncImageConfig.target
                         }, data => {
-                            
+
                         });
                     } else {
                         call('cancelSetDefaultRepo', {}, data => {
