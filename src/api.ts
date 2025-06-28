@@ -311,113 +311,37 @@ main:
         imageName = imageName.replace(/\//g, "-");
 
         imageName = `docker.cnb.cool/${target}/${imageName}`
-
+        
         let yml = ""
-        if(arch === "both"){
-            // 同步amd64和arm64
+        if(arch !== "all"){
+            imageName = imageName + `-linux-${arch}`
             yml = `$:
   api_trigger_cnb_dev_plugin:
-    - runner:
-        tags: cnb:arch:amd64
+    - docker: 
+        image: docker.cnb.cool/xiaofei/docker-sync/skopeo:v1.19.0_with_jq
+      runner:
+        cpus: 8
       services:
         - docker
-      env:
-        IMAGE_TAG: ${imageName}-linux-amd64
       stages:
-        - name: docker login
-          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
-        - name: docker pull
-          script: docker pull ${source}
-        - name: docker tag
-          script: docker tag ${source} \${IMAGE_TAG}
-        - name: docker push
-          script: docker push \${IMAGE_TAG}
-        - name: resolve
-          type: cnb:resolve
-          options:
-            key: build-amd64 
-          
-    - runner:
-        tags: cnb:arch:arm64:v8
-      services:
-        - docker
-      env:
-        IMAGE_TAG: ${imageName}-linux-arm64
-      stages:
-        - name: docker login
-          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
-        - name: docker pull
-          script: docker pull ${source}
-        - name: docker tag
-          script: docker tag ${source} \${IMAGE_TAG}
-        - name: docker push
-          script: docker push \${IMAGE_TAG}
-        - name: resolve
-          type: cnb:resolve
-          options:
-            key: build-arm64
-
-    - services:
-        - docker
-      env:
-        IMAGE_TAG: ${imageName}
-      stages:
-        - name: await the amd64
-          type: cnb:await
-          options:
-            key: build-amd64
-        - name: await the arm64
-          type: cnb:await
-          options:
-            key: build-arm64
-        - name: manifest
-          image: cnbcool/manifest
-          settings:
-            target: ${imageName}
-            template: ${imageName}-OS-ARCH
-            platforms:
-              - linux/amd64
-              - linux/arm64`
-        }else if(arch === "amd64"){
-            // 同步amd64
-            yml = `$:
-  api_trigger_cnb_dev_plugin:
-    - runner:
-        tags: cnb:arch:amd64
-      services:
-        - docker
-      env:
-        IMAGE_TAG: ${imageName}
-      stages:
-        - name: docker login
-          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
-        - name: docker pull
-          script: docker pull ${source}
-        - name: docker tag
-          script: docker tag ${source} \${IMAGE_TAG}
-        - name: docker push
-          script: docker push \${IMAGE_TAG}
-`
+        - name: 执行复制操作
+          script: | 
+              skopeo copy --insecure-policy --override-arch=${arch} --override-os=linux --dest-tls-verify=false docker://${source} docker://${imageName}
+        `
         }else{
-            // 同步arm64
-            yml = `$:
+          yml = `$:
   api_trigger_cnb_dev_plugin:
-    - runner:
-        tags: cnb:arch:arm64:v8
+    - docker: 
+        image: docker.cnb.cool/xiaofei/docker-sync/skopeo:v1.19.0_with_jq
+      runner:
+        cpus: 8
       services:
         - docker
-      env:
-        IMAGE_TAG: ${imageName}
       stages:
-        - name: docker login
-          script: docker login -u \${CNB_TOKEN_USER_NAME} -p "\${CNB_TOKEN}" \${CNB_DOCKER_REGISTRY}
-        - name: docker pull
-          script: docker pull ${source}
-        - name: docker tag
-          script: docker tag ${source} \${IMAGE_TAG}
-        - name: docker push
-          script: docker push \${IMAGE_TAG}
-`
+        - name: 执行复制操作
+          script: | 
+              skopeo copy --insecure-policy --multi-arch=all --dest-tls-verify=false docker://${source} docker://${imageName}
+        `
         }
 
         try{

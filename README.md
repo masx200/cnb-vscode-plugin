@@ -1,16 +1,15 @@
-# CNB.COOL VSCODE Plugin
+# 🚀 **CNB.COOL VSCode 插件**
 
-一个用于管理 CNB (https://cnb.cool) 云开发环境的 VS Code 插件。
+> 一个用于管理 [CNB 云开发环境](https://cnb.cool) 的 VS Code/ Cursor IDE 插件。
 
-此插件可以帮助你在VSCODE中快速启动和连接CNB云开发环境，支持 VS Code 和 Cursor IDE。
+---
 
+## ✨ **核心亮点**
 
-## 功能特性
-
-- 🔑 CNB Token 管理
+- 🔑 **CNB Token 管理**
   - 安全存储和验证 CNB API Token
   - 支持重置 Token
-- 📚 仓库管理
+- 📚 **仓库管理**
   - 查看所有可访问的仓库列表
   - 显示仓库详细信息（描述、Star数、Fork数）
   - 支持私有仓库标识
@@ -18,87 +17,88 @@
     - 设置仓库名称和描述
     - 配置仓库权限（公开/私有）
     - 快速选择启动模板，自动为您安装所需环境
-    - [重磅] 支持创建的时候指定导入仓库
-- 🌲 分支管理
+    - **[重磅] 支持创建时指定导入仓库**
+- 🌲 **分支管理**
   - 查看仓库的所有分支
   - 显示分支最新提交信息
-- ☁️ 云开发环境
+- ☁️ **云开发环境**
   - 一键启动云开发环境
   - 支持自定义 CPU 配置（1-64核）
   - 自动适配 VS Code 和 Cursor IDE
-- 🔄 镜像同步
-  - 利用CNB流水线将Docker官方镜像或者gcr.io的镜像同步到CNB制品库，解决镜像下载不下来的问题
+- 🔄 **镜像同步**
+  - 利用CNB流水线将 Docker 官方镜像或 gcr.io 等国外镜像同步到 CNB 制品库，解决镜像下载难题，支持多架构
 
-## 插件截图
+---
 
+## 🖼️ **插件截图**
+
+> 快速了解插件界面和功能
+
+**安装**
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/install.png" width="500" alt="安装"/>
 
-从插件市场上安装
-
-
+**仓库列表**
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/repos.png" width="500" alt="仓库列表"/>
 
-仓库列表
-
+**镜像同步**
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/syncimage.png" width="500" alt="镜像同步"/>
 
-镜像同步,同步完成后新的镜像地址会显示在【新镜像地址】输入框中
-
+**分支列表**
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/branches.png" width="500" alt="分支列表"/>
 
-分支列表
-
-
+**启动云开发**
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/start.png" width="500" alt="启动云开发"/>
 
-启动云开发
-
+**创建仓库**
 
 <img src="https://vip.123pan.cn/1834041941/images/cnb_plugin/create.png" width="500" alt="创建仓库"/>
 
-创建仓库
+---
 
-
-## 前置要求
+## ⚙️ **前置要求**
 
 1. VS Code 或 Cursor IDE
 2. Remote SSH 插件
 3. CNB Token（需要以下权限）：
-   - `account-engage`（只读）- 用于读取用户仓库列表
-   - `repo-code`（读写）- 用于读取/创建仓库和分支
-   - `repo-cnb-trigger`（读写）- 用于启动云开发环境
-   - `repo-cnb-detail`（只读）- 用于获取云开发环境链接
-   - `group-resource`（读写）- 用于创建新仓库
+   - `account-engage`（只读）- 读取用户仓库列表
+   - `repo-code`（读写）- 读取/创建仓库和分支
+   - `repo-cnb-trigger`（读写）- 启动云开发环境
+   - `repo-cnb-detail`（只读）- 获取云开发环境链接
+   - `group-resource`（读写）- 创建新仓库
 
-## 安装
+---
 
-### 方式一：从 VS Code 插件市场安装（推荐）
+## 🛠️ **安装方式**
+
+### 方式一：**从 VS Code 插件市场安装**（推荐）
 
 1. 打开 VS Code
 2. 点击左侧扩展图标或使用快捷键 `Ctrl+Shift+X` (`Cmd+Shift+X` on Mac)
-3. 在搜索框中输入 "cnb.cool"
+3. 搜索 "cnb.cool"
 4. 点击安装
 
-### 方式二：从 Release 安装 VSIX 文件
+### 方式二：**手动安装 VSIX 文件**
 
-1. 从 [Release 页面](https://cnb.cool/xiaofei/cnb-vscode-plugin/-/releases) 下载最新的 `.vsix` 文件
-2. 在 VS Code/Cursor 中:
+1. 从 [Release 页面](https://cnb.cool/xiaofei/cnb-vscode-plugin/-/releases) 下载最新 `.vsix` 文件
+2. 在 VS Code/Cursor 中：
    - 按 `Ctrl+Shift+P` (`Cmd+Shift+P` on Mac) 打开命令面板
    - 输入 "Install from VSIX"
    - 选择下载的 `.vsix` 文件
 3. 重启 VS Code/Cursor
 
-注意：
-- VS Code 插件市场安装方式仅支持 VS Code
-- VSIX 安装方式同时支持 VS Code 和 Cursor IDE
-- 建议定期检查更新以获取最新功能
+> 💡 **提示：**
+> - VS Code 插件市场安装方式仅支持 VS Code
+> - VSIX 安装方式同时支持 VS Code 和 Cursor IDE
+> - 建议定期检查更新以获取最新功能
 
-## 使用说明
+---
+
+## 📖 **使用说明**
 
 1. **设置 Token**
    - 打开 CNB 的 [Token 设置页面](https://cnb.cool/profile/token)
@@ -119,13 +119,17 @@
    - 选择 CPU 配置
    - 等待环境启动完成
 
-## 注意事项
+---
+
+## ⚠️ **注意事项**
 
 - Token 会被安全存储在 VS Code 的全局存储中
 - 确保有足够的权限访问目标仓库
 - CPU 配置会影响云开发环境的性能和成本
 
-## 常见问题
+---
+
+## ❓ **常见问题**
 
 1. **Token 无效？**
    - 检查 Token 是否具有所需权限
@@ -142,10 +146,14 @@
    - 检查仓库名称是否合法
    - 确认导入仓库地址（如有）是否有效
 
-## 贡献
+---
+
+## 🤝 **贡献**
 
 欢迎提交 Issue 和 Pull Request！
 
-## 许可证
+---
+
+## 📄 **许可证**
 
 [MIT License](https://cnb.cool/xiaofei/cnb-vscode-plugin/-/blob/master/LICENSE)
