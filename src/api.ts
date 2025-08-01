@@ -98,13 +98,14 @@ export class CNBDevAPI {
     }
 
     // 启动新环境
-    async startEnvironment(repoId: string, branch: string, cpus: number): Promise<RemoteSSHInfo> {
+    async startEnvironment(repoId: string, branch: string, 
+            cpus: number, arch: string): Promise<RemoteSSHInfo> {
         try {
-            const response = await axios.post(`${API_BASE_URL}/${repoId}/-/build/start`,
-                {
-                    branch: branch,
-                    event: "api_trigger_cnb_dev_plugin",
-                    config: `
+
+            let cnb_yml = ""
+            if(arch === 'cnb:arch:amd64' || arch === 'cnb:arch:arm64:v8'){
+                // CPU环境
+                cnb_yml = `
 .vscode: &vscode
   api_trigger_cnb_dev_plugin:
     clouddev:
@@ -113,6 +114,7 @@ export class CNBDevAPI {
         image: cnbcool/default-dev-env:latest
       runner:
         cpus: ${cpus}
+        tags: ${arch}
       services:
         - vscode
         - docker
@@ -121,6 +123,32 @@ include:
       $: *vscode
   - path: .cnb.yml
     ignoreError: true`
+            }else{
+                // GPU环境，无法指定CPU数量
+                cnb_yml = `
+                .vscode: &vscode
+                  api_trigger_cnb_dev_plugin:
+                    clouddev:
+                      docker:
+                        build: .ide/Dockerfile
+                        image: cnbcool/default-dev-env:latest
+                      runner:
+                        tags: ${arch}
+                      services:
+                        - vscode
+                        - docker
+                include:
+                  - config:
+                      $: *vscode
+                  - path: .cnb.yml
+                    ignoreError: true`
+            }
+
+            const response = await axios.post(`${API_BASE_URL}/${repoId}/-/build/start`,
+                {
+                    branch: branch,
+                    event: "api_trigger_cnb_dev_plugin",
+                    config: cnb_yml
                 },
                 { headers: this.headers });
 
@@ -274,9 +302,9 @@ main:
 
     parseImageName(sourceImage: string) {
         const imageName = sourceImage.split('@')[0];
-        
+
         const parts = imageName.split('/');
-                switch (parts.length) {
+        switch (parts.length) {
             case 1:
                 return parts[0];
             case 2:
@@ -299,21 +327,67 @@ main:
         }
     }
 
+    get_tencent_mirror_name(source: string): string {
+        // Extract tag if present
+        let imageTag = ":latest";
+        let imageNoTag = source;
+
+        if (source.includes(':')) {
+            const tagMatch = source.match(/:([^/:]+)$/);
+            if (tagMatch) {
+                imageTag = tagMatch[0];
+                imageNoTag = source.replace(/:([^/:]+)$/, '');
+            }
+        }
+
+        // Split the image name to extract registry (first segment)
+        const parts = imageNoTag.split('/');
+        const registry = parts[0];
+
+        // Check if registry is specified (contains '.' or ':')
+        if (registry.includes('.') || registry.includes(':')) {
+            if (registry === 'docker.io') {
+                // Explicit docker.io registry
+                const remainder = parts.slice(1).join('/');
+                // Check if it's a single segment (needs library/ prefix)
+                if (parts.length === 2) {
+                    return `mirror.ccs.tencentyun.com/library/${remainder}${imageTag}`;
+                } else {
+                    return `mirror.ccs.tencentyun.com/${remainder}${imageTag}`;
+                }
+            } else {
+                // Other registry, don't replace
+                return source;
+            }
+        } else {
+            // No registry specified (default docker.io)
+            if (parts.length === 1) {
+                // Single segment, add library/ prefix
+                return `mirror.ccs.tencentyun.com/library/${imageNoTag}${imageTag}`;
+            } else {
+                // Already has namespace
+                return `mirror.ccs.tencentyun.com/${imageNoTag}${imageTag}`;
+            }
+        }
+    }
+
     async syncImage(source: string, target: string, arch: string, getsn: (sn: string) => void): Promise<SyncImageParams> {
-        
-        getsn = getsn || function(){}
+
+        getsn = getsn || function () { }
 
         let imageName = this.parseImageName(source);
-        if(!imageName.includes(":")){
+        if (!imageName.includes(":")) {
             imageName = imageName + ":latest";
         }
 
         imageName = imageName.replace(/\//g, "-");
 
         imageName = `docker.cnb.cool/${target}/${imageName}`
-        
+
+        let mirror_image_name = this.get_tencent_mirror_name(source)
+
         let yml = ""
-        if(arch !== "all"){
+        if (arch !== "all") {
             imageName = imageName + `-linux-${arch}`
             yml = `$:
   api_trigger_cnb_dev_plugin:
@@ -326,10 +400,10 @@ main:
       stages:
         - name: 执行复制操作
           script: | 
-              skopeo copy --insecure-policy --override-arch=${arch} --override-os=linux --dest-tls-verify=false docker://${source} docker://${imageName}
+              skopeo copy --insecure-policy --override-arch=${arch} --override-os=linux --dest-tls-verify=false docker://${mirror_image_name} docker://${imageName}
         `
-        }else{
-          yml = `$:
+        } else {
+            yml = `$:
   api_trigger_cnb_dev_plugin:
     - docker: 
         image: docker.cnb.cool/xiaofei/docker-sync/skopeo:v1.19.0_with_jq
@@ -340,11 +414,11 @@ main:
       stages:
         - name: 执行复制操作
           script: | 
-              skopeo copy --insecure-policy --multi-arch=all --dest-tls-verify=false docker://${source} docker://${imageName}
+              skopeo copy --insecure-policy --multi-arch=all --dest-tls-verify=false docker://${mirror_image_name} docker://${imageName}
         `
         }
 
-        try{
+        try {
             const response = await axios.post(`${API_BASE_URL}/${target}/-/build/start`,
                 {
                     branch: "main",
@@ -352,7 +426,7 @@ main:
                     config: yml
                 },
                 { headers: this.headers });
-            
+
             const data = response.data;
             const sn = data.sn;
 
@@ -365,19 +439,19 @@ main:
                 status = await this.getSyncImageStatus(target, sn);
             }
 
-            if(status === "success"){
+            if (status === "success") {
                 return {
                     newImage: imageName,
                     error: ""
                 }
-            }else{
+            } else {
                 return {
                     newImage: "",
                     error: "同步失败"
                 }
             }
 
-        }catch(error){
+        } catch (error) {
             throw new Error('Failed to sync image');
         }
     }
