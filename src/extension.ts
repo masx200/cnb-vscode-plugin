@@ -203,80 +203,42 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         token = this.context.globalState.get<string>(TOKEN_KEY);
                         if (!token) throw new Error('Token not found');
 
-                        // 选择运行架构
-
-                        const archOptions = [
-                            {label: 'amd64 CPU', value: 'cnb:arch:amd64'},
-                            {label: 'arm64 CPU', value: 'cnb:arch:arm64:v8'},
-                            {label: 'GPU 共享96G显存 32核CPU', value: 'cnb:arch:amd64:gpu'},
-                            {label: 'GPU 共享48GB 16核CPU', value: 'cnb:arch:amd64:gpu:L20'},
-                        ]
-
-                        let selectedArch = await vscode.window.showQuickPick(archOptions, {
-                            placeHolder: '请选择云开发所使用的环境架构',
-                            title: '云开发环境架构配置'
-                        });
-
-                        if(selectedArch){
-                            let selectedCpu = undefined;
-                            if (selectedArch.value === 'cnb:arch:amd64' || selectedArch.value === 'cnb:arch:arm64:v8') {
-                                // 定义 CPU 选项
-                                const cpuOptions = [
-                                    { label: '1 CPU', value: 1 },
-                                    { label: '2 CPUs', value: 2 },
-                                    { label: '4 CPUs', value: 4 },
-                                    { label: '8 CPUs', value: 8 },
-                                    { label: '16 CPUs', value: 16 },
-                                    { label: '32 CPUs', value: 32 },
-                                    { label: '64 CPUs', value: 64 }
-                                ];
-
-                                selectedCpu = await vscode.window.showQuickPick(cpuOptions, {
-                                    placeHolder: '请选择云开发所使用的CPU数量',
-                                    title: '云开发CPU数量配置'
-                                });
-
-                                if(!selectedCpu){
-                                    webviewView.webview.postMessage({
-                                        command: 'cancelCNBStart',
-                                        eventid: message.eventid
-                                    });
-                                    break;
-                                }
-                            }
-
-                            const sshUrl = await new CNBDevAPI(token).startEnvironment(
-                                message.repoId,
-                                message.branch,
-                                selectedCpu ? selectedCpu.value : 0,
-                                selectedArch.value
-                            );
-
-                            if (!sshUrl.cursor && !sshUrl.vscode) {
-                                webviewView.webview.postMessage({
-                                    command: 'cnbStartFailed',
-                                    eventid: message.eventid
-                                });
-                                throw new Error('启动云开发成功,但是未能远程连接,这可能是您自定义了开发环境,但是并未安装openssh服务');
-                            } else {
-                                let url = sshUrl.vscode.replace('vscode://', getSSHUrlSchema())
-                                await vscode.env.openExternal(vscode.Uri.parse(url));
-
-                                webviewView.webview.postMessage({
-                                    command: 'cnbStartSuccess',
-                                    eventid: message.eventid
-                                });
-                            }
-
-
-                        }else{
+                        // 直接使用页面传过来的参数
+                        const selectedArch = message.selectedArch;
+                        const selectedCpu = message.selectedCpu || 0;
+                        
+                        // 如果没有提供必要参数，返回错误
+                        if (!selectedArch) {
                             webviewView.webview.postMessage({
-                                command: 'cancelCNBStart',
-                                eventid: message.eventid
+                                command: 'cnbStartFailed',
+                                eventid: message.eventid,
+                                error: '缺少必要参数: 环境架构'
                             });
                             break;
                         }
 
+                        const sshUrl = await new CNBDevAPI(token).startEnvironment(
+                            message.repoId,
+                            message.branch,
+                            selectedCpu,
+                            selectedArch
+                        );
+
+                        if (!sshUrl.cursor && !sshUrl.vscode) {
+                            webviewView.webview.postMessage({
+                                command: 'cnbStartFailed',
+                                eventid: message.eventid
+                            });
+                            throw new Error('启动云开发成功,但是未能远程连接,这可能是您自定义了开发环境,但是并未安装openssh服务');
+                        } else {
+                            let url = sshUrl.vscode.replace('vscode://', getSSHUrlSchema())
+                            await vscode.env.openExternal(vscode.Uri.parse(url));
+
+                            webviewView.webview.postMessage({
+                                command: 'cnbStartSuccess',
+                                eventid: message.eventid
+                            });
+                        }
                         break;
 
                     case 'getGroupList':

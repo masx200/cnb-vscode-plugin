@@ -115,7 +115,7 @@
                         </div>
                     </div>
                     <div class="start-cnb branch-right">
-                        <button class="start-cnb-btn" @click="startCnb(branch.name)" v-if="btnShows[branch.name]">
+                        <button class="start-cnb-btn" @click="showCloudOptions(branch.name)" v-if="btnShows[branch.name]">
                             <svg class="icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                 viewBox="0 0 16 16">
                                 <g fill="none">
@@ -140,6 +140,47 @@
                         </button>
                     </div>
 
+                </div>
+            </div>
+        </div>
+        
+        <!-- Cloud Development Options Dialog -->
+        <div class="cloud-options-dialog" v-if="showCloudDevOptions">
+            <div class="cloud-options-content">
+                <div class="cloud-options-header">
+                    <h3>云开发环境配置</h3>
+                    <button class="close-btn" @click="closeCloudOptions">&times;</button>
+                </div>
+                <div class="cloud-options-body">
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label>环境架构</label>
+                        </div>
+                        <div class="form-item-input">
+                            <select v-model="cloudConfig.selectedArch" class="custom-select" @change="console.log('Arch changed:', cloudConfig.selectedArch)">
+                                <option v-for="arch in cloudConfig.archOptions" :value="arch.value" :key="arch.value">
+                                    {{ arch.label }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-item" v-if="cloudConfig.selectedArch === 'cnb:arch:amd64' || cloudConfig.selectedArch === 'cnb:arch:arm64:v8'">
+                        <div class="form-item-label">
+                            <label>CPU 数量</label>
+                        </div>
+                        <div class="form-item-input">
+                            <select v-model="cloudConfig.selectedCpu" class="custom-select">
+                                <option v-for="cpu in cloudConfig.cpuOptions" :value="cpu.value" :key="cpu.value">
+                                    {{ cpu.label }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="cloud-options-footer">
+                        <button class="cloud-start-btn" @click="startCloudDev">开启云开发环境</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -350,7 +391,7 @@
                     </svg>
                 </div>
                 <div style="margin-top: 20px;">
-                    正在启动云开发中.....
+                    正在启动云开发中..... <span v-if="waitTime" class="wait-time">{{ waitTimeFormatted }}</span>
                 </div>
             </div>
         </div>
@@ -379,6 +420,8 @@
                     repoId: '',
                     repositories: [],
                     waitCNBStart: false,
+                    waitTime: 0,
+                    waitTimer: null,
                     branches: [
 
                     ],
@@ -408,6 +451,27 @@
                         error: ''
                     },
                     syncing: false,
+                    showCloudDevOptions: false,
+                    currentBranch: '',
+                    cloudConfig: {
+                        selectedArch: 'cnb:arch:amd64',
+                        archOptions: [
+                            {label: 'amd64 CPU', value: 'cnb:arch:amd64'},
+                            {label: 'arm64 CPU', value: 'cnb:arch:arm64:v8'},
+                            {label: 'GPU 共享96G显存 32核CPU', value: 'cnb:arch:amd64:gpu'},
+                            {label: 'GPU 共享48GB 16核CPU', value: 'cnb:arch:amd64:gpu:L20'},
+                        ],
+                        selectedCpu: 8,
+                        cpuOptions: [
+                            { label: '1 CPU', value: 1 },
+                            { label: '2 CPUs', value: 2 },
+                            { label: '4 CPUs', value: 4 },
+                            { label: '8 CPUs', value: 8 },
+                            { label: '16 CPUs', value: 16 },
+                            { label: '32 CPUs', value: 32 },
+                            { label: '64 CPUs', value: 64 }
+                        ]
+                    }
                 };
             },
             methods: {
@@ -546,11 +610,17 @@
                 },
                 startCnb(branchName) {
                     this.waitCNBStart = true;
+                    
+                    // 重置等待时间并开始计时
+                    this.waitTime = 0;
+                    this.startWaitTimer();
+                    
                     call('startEnvironment', {
                         branch: branchName,
                         repoId: this.repoId
                     }, data => {
                         this.waitCNBStart = false;
+                        this.stopWaitTimer();
                     })
                 },
                 showCNBStartBtn(branchName) {
@@ -653,6 +723,53 @@
                             this.newRepoError = "创建失败,请重试";
                         }
                     })
+                },
+                showCloudOptions(branchName) {
+                    this.showCloudDevOptions = true;
+                    this.currentBranch = branchName;
+                    this.cloudConfig.selectedArch = 'cnb:arch:amd64'; // 默认选择amd64
+                    this.cloudConfig.selectedCpu = 8; // 默认选择8核CPU
+                },
+                closeCloudOptions() {
+                    this.showCloudDevOptions = false;
+                },
+                startCloudDev() {
+                    this.waitCNBStart = true;
+                    this.showCloudDevOptions = false;
+                    
+                    // 重置等待时间并开始计时
+                    this.waitTime = 0;
+                    this.startWaitTimer();
+                    
+                    call('startEnvironment', {
+                        branch: this.currentBranch,
+                        repoId: this.repoId,
+                        selectedArch: this.cloudConfig.selectedArch,
+                        selectedCpu: this.cloudConfig.selectedCpu
+                    }, data => {
+                        this.waitCNBStart = false;
+                        this.stopWaitTimer();
+                        if (data.command === 'cnbStartFailed' && data.error) {
+                            vscode.postMessage({
+                                command: 'error',
+                                message: data.error
+                            });
+                        }
+                    });
+                },
+                // 开始计时器
+                startWaitTimer() {
+                    this.stopWaitTimer(); // 确保先停止任何可能存在的计时器
+                    this.waitTimer = setInterval(() => {
+                        this.waitTime++;
+                    }, 1000);
+                },
+                // 停止计时器
+                stopWaitTimer() {
+                    if (this.waitTimer) {
+                        clearInterval(this.waitTimer);
+                        this.waitTimer = null;
+                    }
                 }
 
             },
@@ -691,10 +808,20 @@
                         return this.branches;
                     }
                     return this.branches.filter(branch => branch.name.includes(this.search_branch_keyword));
+                },
+                // 格式化等待时间
+                waitTimeFormatted() {
+                    const minutes = Math.floor(this.waitTime / 60);
+                    const seconds = this.waitTime % 60;
+                    return `${minutes}分${seconds.toString().padStart(2, '0')}秒`;
                 }
             },
             mounted() {
                 this.sayHello();
+            },
+            // 确保在组件销毁前清除计时器
+            beforeUnmount() {
+                this.stopWaitTimer();
             }
         });
 
