@@ -359,6 +359,22 @@
             </div>
         </div>
 
+        <!-- 确认对话框 -->
+        <div class="confirm-dialog" v-if="showConfirmDialog">
+            <div class="confirm-dialog-content">
+                <div class="confirm-dialog-header">
+                    <h3>{{ confirmDialogTitle }}</h3>
+                </div>
+                <div class="confirm-dialog-body">
+                    <p>{{ confirmDialogMessage }}</p>
+                </div>
+                <div class="confirm-dialog-footer">
+                    <button class="confirm-cancel-btn" @click="cancelConfirmDialog">取消</button>
+                    <button class="confirm-ok-btn" @click="confirmDialogConfirm">确认</button>
+                </div>
+            </div>
+        </div>
+
         <div v-if="page !== 'settoken' && !syncing" class="resetToken">
             <a v-if="page !== 'syncImage'" href="javascript:void(0)" @click="syncImage">镜像同步</a>
             <a v-else href="javascript:void(0)" @click="backRepos">返回仓库列表</a>
@@ -471,7 +487,12 @@
                             { label: '32 CPUs', value: 32 },
                             { label: '64 CPUs', value: 64 }
                         ]
-                    }
+                    },
+                    showConfirmDialog: false,
+                    confirmDialogTitle: '',
+                    confirmDialogMessage: '',
+                    confirmDialogConfirmCallback: null,
+                    confirmDialogCancelCallback: null
                 };
             },
             methods: {
@@ -630,9 +651,18 @@
                     this.btnShows[branchName] = false;
                 },
                 resetToken() {
-                    call('resetToken', {}, data => {
-                        this.tokenIsNotReady();
-                    })
+                    this.showConfirmDialog = true;
+                    this.confirmDialogTitle = '重置CNBToken';
+                    this.confirmDialogMessage = '确定要重置CNBToken吗？这将导致您需要重新登录CNB。';
+                    this.confirmDialogConfirmCallback = () => {
+                        call('resetToken', {}, data => {
+                            this.tokenIsNotReady();
+                        });
+                        this.showConfirmDialog = false;
+                    };
+                    this.confirmDialogCancelCallback = () => {
+                        this.showConfirmDialog = false;
+                    };
                 },
                 newRepo() {
                     if (this.groups && this.groups.length === 0) {
@@ -770,6 +800,18 @@
                         clearInterval(this.waitTimer);
                         this.waitTimer = null;
                     }
+                },
+                confirmDialogConfirm() {
+                    if (this.confirmDialogConfirmCallback) {
+                        this.confirmDialogConfirmCallback();
+                    }
+                    this.showConfirmDialog = false;
+                },
+                cancelConfirmDialog() {
+                    if (this.confirmDialogCancelCallback) {
+                        this.confirmDialogCancelCallback();
+                    }
+                    this.showConfirmDialog = false;
                 }
 
             },
