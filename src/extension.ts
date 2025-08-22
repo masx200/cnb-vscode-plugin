@@ -231,7 +231,11 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                             });
                             throw new Error('启动云开发成功,但是未能远程连接,这可能是您自定义了开发环境,但是并未安装openssh服务');
                         } else {
-                            let url = sshUrl.vscode.replace('vscode://', getSSHUrlSchema())
+                            let schema =  getSSHUrlSchema()
+                            let url = sshUrl.vscode.replace('vscode://', schema)
+                            if(schema === "codebuddy://"){
+                                url = url.replace("ssh-remote","codebuddy-remote-ssh")
+                            }
                             await vscode.env.openExternal(vscode.Uri.parse(url));
 
                             webviewView.webview.postMessage({
