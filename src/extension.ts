@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { CNBDevAPI } from './api';
+import { CNBDevAPI,RunImage } from './api';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -7,13 +7,13 @@ const TOKEN_KEY = 'cnbDev.token';
 const DEFAULT_REPO_KEY = 'cnbDev.defaultRepo';
 
 
-function getSSHUrlSchema(): string{
+function getSSHUrlSchema(): string {
     const appName = vscode.env.appName.toLowerCase();
-    console.log("appName--->",appName)
-    if(appName.includes('cursor')){
+    console.log("appName--->", appName)
+    if (appName.includes('cursor')) {
         return 'cursor://'
     }
-    if(appName.includes('codebuddy')){
+    if (appName.includes('codebuddy')) {
         return 'codebuddy://'
     }
     return 'vscode://'
@@ -160,8 +160,8 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         const source = message.source;
                         const target = message.target;
                         const arch = message.arch;
-                        const syncResult = await new CNBDevAPI(token).syncImage(source, target, arch, 
-                            function(sn:string){
+                        const syncResult = await new CNBDevAPI(token).syncImage(source, target, arch,
+                            function (sn: string) {
                                 webviewView.webview.postMessage({
                                     command: 'syncImageSuccess_getsn',
                                     sn: sn,
@@ -206,7 +206,8 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         // 直接使用页面传过来的参数
                         const selectedArch = message.selectedArch;
                         const selectedCpu = message.selectedCpu || 0;
-                        
+                        const selectImage = message.selectedImage
+
                         // 如果没有提供必要参数，返回错误
                         if (!selectedArch) {
                             webviewView.webview.postMessage({
@@ -221,7 +222,8 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                             message.repoId,
                             message.branch,
                             selectedCpu,
-                            selectedArch
+                            selectedArch,
+                            selectImage
                         );
 
                         if (!sshUrl.cursor && !sshUrl.vscode) {
@@ -231,10 +233,10 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                             });
                             throw new Error('启动云开发成功,但是未能远程连接,这可能是您自定义了开发环境,但是并未安装openssh服务');
                         } else {
-                            let schema =  getSSHUrlSchema()
+                            let schema = getSSHUrlSchema()
                             let url = sshUrl.vscode.replace('vscode://', schema)
-                            if(schema === "codebuddy://"){
-                                url = url.replace("ssh-remote","codebuddy-remote-ssh")
+                            if (schema === "codebuddy://") {
+                                url = url.replace("ssh-remote", "codebuddy-remote-ssh")
                             }
                             await vscode.env.openExternal(vscode.Uri.parse(url));
 
@@ -293,6 +295,28 @@ class CNBDevViewProvider implements vscode.WebviewViewProvider {
                         }
 
                         break;
+                    case 'getRunImages':
+                        try {
+                            const runImages = await new CNBDevAPI("").getRunImages()
+                            let runImagesMap: { [key: string]: RunImage[] } = {};
+                            runImages.map(x => {
+                                if (!runImagesMap[x.language]) {
+                                    runImagesMap[x.language] = [];
+                                }
+                                runImagesMap[x.language].push(x);
+                            });
+                            webviewView.webview.postMessage({
+                                command: 'getRunImagesSuccess',
+                                runImages: runImagesMap,
+                                eventid: message.eventid
+                            });
+                        } catch (error) {
+                            webviewView.webview.postMessage({
+                                command: 'getRunImagesRepoFailed',
+                                eventid: message.eventid
+                            });
+                        }
+                        break
                 }
             } catch (error) {
                 vscode.window.showErrorMessage((error as Error).message);

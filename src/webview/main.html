@@ -178,6 +178,34 @@
                         </div>
                     </div>
                     
+                    <div class="form-item">
+                        <div class="form-item-label">
+                            <label>选择语言</label>
+                        </div>
+                        <div class="form-item-input">
+                            <select v-model="cloudConfig.selectedLanguage" class="custom-select" @change="cloudConfig.selectedImage = ''">
+                                <option value="">不选择镜像</option>
+                                <option v-for="(images, language) in runImages" :value="language" :key="language">
+                                    {{ language }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-item" v-if="cloudConfig.selectedLanguage">
+                        <div class="form-item-label">
+                            <label>选择镜像</label>
+                        </div>
+                        <div class="form-item-input">
+                            <select v-model="cloudConfig.selectedImage" class="custom-select">
+                                <option value="">请选择镜像版本</option>
+                                <option v-for="image in runImages[cloudConfig.selectedLanguage]" :value="image.image" :key="image.name">
+                                    {{ image.name }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                    
                     <div class="cloud-options-footer">
                         <button class="cloud-start-btn" @click="startCloudDev">开启云开发环境</button>
                     </div>
@@ -486,13 +514,16 @@
                             { label: '16 CPUs', value: 16 },
                             { label: '32 CPUs', value: 32 },
                             { label: '64 CPUs', value: 64 }
-                        ]
+                        ],
+                        selectedLanguage: '',
+                        selectedImage: ''
                     },
                     showConfirmDialog: false,
                     confirmDialogTitle: '',
                     confirmDialogMessage: '',
                     confirmDialogConfirmCallback: null,
-                    confirmDialogCancelCallback: null
+                    confirmDialogCancelCallback: null,
+                    runImages: {},
                 };
             },
             methods: {
@@ -759,6 +790,11 @@
                     this.currentBranch = branchName;
                     this.cloudConfig.selectedArch = 'cnb:arch:amd64'; // 默认选择amd64
                     this.cloudConfig.selectedCpu = 8; // 默认选择8核CPU
+                    this.cloudConfig.selectedLanguage = ''; // 重置语言选择
+                    this.cloudConfig.selectedImage = ''; // 重置镜像选择
+                    call('getRunImages', {}, data=>{
+                        this.runImages = data.runImages || this.runImages;
+                    })
                 },
                 closeCloudOptions() {
                     this.showCloudDevOptions = false;
@@ -775,7 +811,8 @@
                         branch: this.currentBranch,
                         repoId: this.repoId,
                         selectedArch: this.cloudConfig.selectedArch,
-                        selectedCpu: this.cloudConfig.selectedCpu
+                        selectedCpu: this.cloudConfig.selectedCpu,
+                        selectedImage: this.cloudConfig.selectedImage
                     }, data => {
                         this.waitCNBStart = false;
                         this.stopWaitTimer();

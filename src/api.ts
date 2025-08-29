@@ -47,6 +47,12 @@ export interface SyncImageParams {
     error: string;
 }
 
+export interface RunImage{
+    language: string,
+    name: string,
+    image: string
+}
+
 // API类
 export class CNBDevAPI {
     private token: string;
@@ -99,10 +105,20 @@ export class CNBDevAPI {
 
     // 启动新环境
     async startEnvironment(repoId: string, branch: string, 
-            cpus: number, arch: string): Promise<RemoteSSHInfo> {
+            cpus: number, arch: string, image: string): Promise<RemoteSSHInfo> {
         try {
 
             let cnb_yml = ""
+            
+            if(image === ""){
+                image = "cnbcool/default-dev-env:latest"
+            }
+
+            let build = ".ide/Dockerfile"
+            if(image !== "cnbcool/default-dev-env:latest"){
+                build = ""
+            }
+            
             if(arch === 'cnb:arch:amd64' || arch === 'cnb:arch:arm64:v8'){
                 // CPU环境
                 cnb_yml = `
@@ -110,8 +126,8 @@ export class CNBDevAPI {
   api_trigger_cnb_dev_plugin:
     clouddev:
       docker:
-        build: .ide/Dockerfile
-        image: cnbcool/default-dev-env:latest
+        build: ${build}
+        image: ${image}
       runner:
         cpus: ${cpus}
         tags: ${arch}
@@ -130,8 +146,8 @@ include:
                   api_trigger_cnb_dev_plugin:
                     clouddev:
                       docker:
-                        build: .ide/Dockerfile
-                        image: cnbcool/default-dev-env:latest
+                        build:  ${build}
+                        image: ${image}
                       runner:
                         tags: ${arch}
                       services:
@@ -368,6 +384,17 @@ main:
                 // Already has namespace
                 return `mirror.ccs.tencentyun.com/${imageNoTag}${imageTag}`;
             }
+        }
+    }
+
+    async getRunImages(): Promise<RunImage[]> {
+
+        try{
+            let resp = await fetch("https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/images/images.json")
+            let images_text = await resp.text()
+            return JSON.parse(images_text)
+        }catch (error) {
+            throw new Error('Failed to get images');
         }
     }
 
