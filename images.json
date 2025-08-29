@@ -1,0 +1,76 @@
+{
+    "golang": [
+        {
+            "name": "golang-1.24",
+            "image": "docker.cnb.cool/examples/language/golang-1.24",
+        },
+        {
+            "name": "golang-1.23",
+            "image": "docker.cnb.cool/examples/language/golang-1.23",
+        }
+    ],
+    "java": [
+        {
+            "name": "OpenJDK-1.8",
+            "image": "docker.cnb.cool/examples/language/java-8",
+        }
+    ],
+    "python": [
+        {
+            "name": "python-3.12",
+            "image": "docker.cnb.cool/examples/language/python-3",
+        }
+    ],
+    "node": [
+        {
+            "name": "node-23",
+            "image": "docker.cnb.cool/examples/workspace-images/workspace-node:23"
+        },
+        {
+            "name": "node-22",
+            "image": "docker.cnb.cool/examples/workspace-images/workspace-node:22"
+        },
+        {
+            "name": "node-20",
+            "image": "docker.cnb.cool/examples/workspace-images/workspace-node:20"
+        },
+        {
+            "name": "node-18",
+            "image": "docker.cnb.cool/examples/workspace-images/workspace-node:18"
+        }
+    ],
+    "rust": [
+        {
+            "name": "rust-1.87",
+            "image": "docker.cnb.cool/examples/language/rust-1.87",
+        }
+    ],
+    "php": [
+        {
+            "name": "php-8.4",
+            "image": "docker.cnb.cool/examples/language/php-8.4"
+        }
+    ],
+    "cuda": [
+        {
+            "name": "CUDA-12.4",
+            "image": "docker.cnb.cool/examples/language/cuda-12.4"
+        }
+    ],
+    "golang+node": [
+        {
+            "name": "Go-1.24+Node-18",
+            "image": "docker.cnb.cool/znb/images/debian:all"
+        },
+        {
+            "name": "Go-1.25+Node-22",
+            "image": "docker.cnb.cool/znb/images/debian:new"
+        }
+    ],
+    "dotnet": [
+        {
+            "name": "dotnet-9.0",
+            "image": "docker.cnb.cool/examples/language/dotnet-9.0"
+        }
+    ]
+}
