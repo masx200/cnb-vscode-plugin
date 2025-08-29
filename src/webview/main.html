@@ -183,7 +183,7 @@
                             <label>选择语言</label>
                         </div>
                         <div class="form-item-input">
-                            <select v-model="cloudConfig.selectedLanguage" class="custom-select" @change="cloudConfig.selectedImage = ''">
+                            <select v-model="cloudConfig.selectedLanguage" class="custom-select">
                                 <option value="">不选择镜像</option>
                                 <option v-for="(images, language) in runImages" :value="language" :key="language">
                                     {{ language }}
@@ -198,11 +198,15 @@
                         </div>
                         <div class="form-item-input">
                             <select v-model="cloudConfig.selectedImage" class="custom-select">
-                                <option value="">请选择镜像版本</option>
                                 <option v-for="image in runImages[cloudConfig.selectedLanguage]" :value="image.image" :key="image.name">
                                     {{ image.name }}
                                 </option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="form-item">
+                        <div class="form-item-tips">
+                            如果您有好用的开发环境镜像推荐或者有什么需求，可以在 <a href="https://cnb.cool/xiaofei/cnb-vscode-plugin" target="_blank">https://cnb.cool/xiaofei/cnb-vscode-plugin</a> 提交issue
                         </div>
                     </div>
                     
@@ -872,6 +876,16 @@
                         }
                     },
                     immediate: true
+                },
+                'cloudConfig.selectedLanguage': {
+                    handler: function (newVal, oldVal) {
+                        if (newVal && this.runImages[newVal] && this.runImages[newVal].length > 0) {
+                            // 自动选择第一个镜像
+                            this.cloudConfig.selectedImage = this.runImages[newVal][0].image;
+                        } else {
+                            this.cloudConfig.selectedImage = '';
+                        }
+                    }
                 }
 
             },
