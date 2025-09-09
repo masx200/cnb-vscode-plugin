@@ -1,5 +1,10 @@
 [
     {
+        "language": "ubuntu",
+        "name": "ubuntu-22.04-withuv",
+        "image": "docker.cnb.cool/xiaofei/dockerbuild/ubuntu-22.04-withuv"
+    },
+    {
         "language": "golang",
         "name": "golang-1.24",
         "image": "docker.cnb.cool/examples/language/golang-1.24"
