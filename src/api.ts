@@ -398,6 +398,28 @@ main:
         }
     }
 
+    async getArchOptions(): Promise<any[]> {
+
+        try{
+            let resp = await fetch("https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/images/archOptions.json")
+            let text = await resp.text()
+            return JSON.parse(text)
+        }catch (error) {
+            throw new Error('Failed to get');
+        }
+    }
+
+    async getIDESchemas(): Promise<any[]> {
+        //https://cnb.cool/xiaofei/cnb-vscode-plugin/-/blob/images/ide_schema.json
+         try{
+            let resp = await fetch("https://cnb.cool/xiaofei/cnb-vscode-plugin/-/git/raw/images/ide_schema.json")
+            let text = await resp.text()
+            return JSON.parse(text)
+        }catch (error) {
+            throw new Error('Failed to get');
+        }
+    }
+
     async syncImage(source: string, target: string, arch: string, getsn: (sn: string) => void): Promise<SyncImageParams> {
 
         getsn = getsn || function () { }

@@ -504,11 +504,7 @@
                     cloudConfig: {
                         selectedArch: 'cnb:arch:amd64',
                         archOptions: [
-                            {label: 'amd64 CPU', value: 'cnb:arch:amd64'},
-                            {label: 'arm64 CPU', value: 'cnb:arch:arm64:v8'},
-                            {label: 'GPU 共享96G显存 32核CPU', value: 'cnb:arch:amd64:gpu'},
-                            {label: 'GPU 共享48GB 16核CPU', value: 'cnb:arch:amd64:gpu:L20'},
-                        ],
+                       ],
                         selectedCpu: 8,
                         cpuOptions: [
                             { label: '1 CPU', value: 1 },
@@ -798,6 +794,11 @@
                     this.cloudConfig.selectedImage = ''; // 重置镜像选择
                     call('getRunImages', {}, data=>{
                         this.runImages = data.runImages || this.runImages;
+                    })
+                    call('getArchOptions', {}, data => {
+                        this.cloudConfig.archOptions = data.archOptions || [ 
+                            {label: 'amd64 CPU', value: 'cnb:arch:amd64'},
+                            {label: 'arm64 CPU', value: 'cnb:arch:arm64:v8'}]
                     })
                 },
                 closeCloudOptions() {
