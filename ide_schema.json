@@ -1,0 +1,14 @@
+[
+  {
+    "match": "cursor",
+    "schema": "cursor://"
+  },
+  {
+    "match": "codebuddy",
+    "schema": "codebuddy://"
+  },
+  {
+    "match": "trae",
+    "schema": "trae-cn://"
+  }
+]
