@@ -1,0 +1,7 @@
+[
+    {"label": "amd64 CPU", "value": "cnb:arch:amd64"},
+    {"label": "arm64 CPU", "value": "cnb:arch:arm64:v8"},
+    {"label": "GPU 共享48G显存 16核CPU", "value": "cnb:arch:amd64:gpu"},
+    {"label": "GPU 共享96GB 32核CPU", "value": "ccnb:arch:amd64:gpu:H20"},
+    {"label": "GPU 共享48GB 16核CPU", "value": "cnb:arch:amd64:gpu:L40"}
+]
