@@ -59,6 +59,6 @@
         "vscode-test": "^1.5.2"
     },
     "dependencies": {
-        "axios": "^1.6.7"
+        "axios": "^1.15.2"
     }
 }
